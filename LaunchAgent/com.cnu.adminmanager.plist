@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+    LaunchAgent for CNUAdminManager nag cycle.
+    Launches the app every 4 hours (14400 seconds) for the
+    currently logged-in user. The app checks if the user has
+    admin rights; if not, it quits immediately.
+
+    Install to: /Library/LaunchAgents/com.cnu.adminmanager.plist
+
+    NOTE: The StartInterval can be overridden via Jamf config profile
+    by setting the NagIntervalSeconds key in the managed preferences.
+    However, the LaunchAgent plist itself must be updated separately
+    if you want to change the actual launch interval.
+-->
+<dict>
+    <key>Label</key>
+    <string>com.cnu.adminmanager</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/open</string>
+        <string>-a</string>
+        <string>/Library/Application Support/CNUAdminManager/CNUAdminManager.app</string>
+    </array>
+
+    <!-- Launch every 4 hours (14400 seconds) -->
+    <key>StartInterval</key>
+    <integer>14400</integer>
+
+    <!-- Also launch at login/load -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Only run when a user is logged in (graphical session) -->
+    <key>LimitLoadToSessionType</key>
+    <array>
+        <string>Aqua</string>
+    </array>
+
+    <!-- Don't show in the Dock (the app handles this via LSUIElement) -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>

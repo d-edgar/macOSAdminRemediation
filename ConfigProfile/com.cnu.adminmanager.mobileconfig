@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    Example Jamf Pro Configuration Profile for CNUAdminManager.
+
+    Deploy this as a Custom Settings profile in Jamf Pro,
+    targeting the same smart group as the PKG.
+
+    Preference Domain: com.cnu.adminmanager
+
+    All keys are optional — the app uses sensible defaults
+    for anything not specified in the profile.
+-->
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadType</key>
+            <string>com.cnu.adminmanager</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>PayloadIdentifier</key>
+            <string>com.cnu.adminmanager.settings</string>
+            <key>PayloadUUID</key>
+            <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
+            <key>PayloadDisplayName</key>
+            <string>CNU Admin Manager Settings</string>
+            <key>PayloadDescription</key>
+            <string>Configures the CNU Admin Rights Management tool behavior, branding, and remediation options.</string>
+
+            <!-- ======================== -->
+            <!-- Organization Branding    -->
+            <!-- ======================== -->
+
+            <!-- Organization name shown in the UI -->
+            <key>OrganizationName</key>
+            <string>CNU</string>
+
+            <!-- URL where users submit elevation requests -->
+            <key>SupportRequestURL</key>
+            <string>https://support.cnu.edu/admin-request</string>
+
+            <!-- Support email displayed in the app -->
+            <key>SupportEmail</key>
+            <string>itsupport@cnu.edu</string>
+
+            <!-- Custom policy message (replaces the default text) -->
+            <key>PolicyMessage</key>
+            <string>Your account currently has administrator privileges on this Mac. Per CNU IT policy, standard user accounts should not retain persistent admin rights. This poses a security risk to your device and the university network. Please remediate below or submit a request if you require elevated access for your role.</string>
+
+            <!-- ======================== -->
+            <!-- Behavior Settings        -->
+            <!-- ======================== -->
+
+            <!-- Nag interval in seconds (display only — actual interval controlled by LaunchAgent) -->
+            <key>NagIntervalSeconds</key>
+            <integer>14400</integer>
+
+            <!-- Allow users to close the window without acting (default: false) -->
+            <key>AllowDeferral</key>
+            <false/>
+
+            <!-- Grace period in days before forced remediation (0 = nag only, no force) -->
+            <key>GracePeriodDays</key>
+            <integer>0</integer>
+
+            <!-- Show the "Submit Request" button (set false to only allow remediation) -->
+            <key>ShowSubmitRequestOption</key>
+            <true/>
+
+            <!-- ======================== -->
+            <!-- Jamf Connect Integration -->
+            <!-- ======================== -->
+
+            <!-- Path to Jamf Connect app (for detection) -->
+            <key>JamfConnectAppPath</key>
+            <string>/Applications/Jamf Connect.app</string>
+
+            <!-- Jamf Connect elevation workflow URL (optional) -->
+            <key>JamfConnectElevationURL</key>
+            <string></string>
+
+            <!-- ======================== -->
+            <!-- Audit Logging            -->
+            <!-- ======================== -->
+
+            <!-- Enable local audit log file -->
+            <key>EnableLocalAuditLog</key>
+            <true/>
+
+            <!-- Path for audit log -->
+            <key>AuditLogPath</key>
+            <string>/Library/Logs/CNUAdminManager.log</string>
+        </dict>
+    </array>
+
+    <!-- Profile-level metadata -->
+    <key>PayloadDisplayName</key>
+    <string>CNU Admin Manager Configuration</string>
+    <key>PayloadIdentifier</key>
+    <string>com.cnu.adminmanager.profile</string>
+    <key>PayloadOrganization</key>
+    <string>Christopher Newport University</string>
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>F1E2D3C4-B5A6-7890-FEDC-BA0987654321</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

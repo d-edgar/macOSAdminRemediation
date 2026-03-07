@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+    LaunchDaemon for the CNUAdminManager privileged helper.
+    Runs as root. Watches for remediation signal files and
+    performs admin rights removal.
+
+    Install to: /Library/LaunchDaemons/com.cnu.adminmanager.helper.plist
+    Binary at:  /Library/PrivilegedHelperTools/com.cnu.adminmanager.helper
+-->
+<dict>
+    <key>Label</key>
+    <string>com.cnu.adminmanager.helper</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/PrivilegedHelperTools/com.cnu.adminmanager.helper</string>
+    </array>
+
+    <!-- Run at load and keep alive -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/Library/Logs/CNUAdminManager-helper.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Library/Logs/CNUAdminManager-helper-error.log</string>
+
+    <!-- Hardened runtime -->
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>
