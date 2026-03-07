@@ -16,13 +16,26 @@ struct AdminUserInfo: Identifiable {
     let isCurrentUser: Bool
     let accountType: AccountType
 
+    /// User ID (UID) for local accounts (e.g., 502, 503)
+    let uid: String?
+
     enum AccountType: String, CustomStringConvertible {
-        case local = "Local"
-        case mobile = "Mobile (AD-bound)"
-        case network = "Network"
+        case local = "Local Account"
+        case mobile = "Mobile Account (Domain-bound)"
+        case network = "Network Account"
         case unknown = "Unknown"
 
         var description: String { rawValue }
+
+        /// Short explanation shown in the report UI
+        var explanation: String {
+            switch self {
+            case .local: return "Local account with a local UID"
+            case .mobile: return "Device is bound to a directory; cached domain credentials"
+            case .network: return "Authenticated against network directory"
+            case .unknown: return "Could not determine account type"
+            }
+        }
     }
 }
 
@@ -95,6 +108,9 @@ struct SystemReport: Identifiable {
             lines.append("  \(index + 1). \(user.username)\(marker)")
             lines.append("     Full Name:    \(user.fullName)")
             lines.append("     Account Type: \(user.accountType)")
+            if let uid = user.uid {
+                lines.append("     UID:          \(uid)")
+            }
         }
 
         lines.append("")

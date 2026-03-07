@@ -22,37 +22,39 @@ struct ContentView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .ignoresSafeArea()
 
-            Group {
-                switch appState.currentView {
-                case .nag:
-                    NagView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .transition(.opacity)
+            currentView
+                .animation(.easeInOut(duration: 0.3), value: viewIdentifier)
+        }
+    }
 
-                case .report:
-                    ReportView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                        .transition(.move(edge: .trailing))
+    @ViewBuilder
+    private var currentView: some View {
+        switch appState.currentView {
+        case .nag:
+            NagView()
+                .transition(.opacity)
 
-                case .remediating:
-                    RemediatingView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(.opacity)
-
-                case .remediationComplete:
-                    RemediationCompleteView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(.scale)
-
-                case .error(let message):
-                    ErrorView(message: message)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(.opacity)
-                }
+        case .report:
+            if let report = appState.systemReport {
+                ReportView(report: report)
+                    .transition(.opacity)
             }
-            .animation(.easeInOut(duration: 0.3), value: viewIdentifier)
+
+        case .remediating:
+            RemediatingView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
+
+        case .remediationComplete:
+            RemediationCompleteView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.scale)
+
+        case .error(let message):
+            ErrorView(message: message)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
         }
     }
 

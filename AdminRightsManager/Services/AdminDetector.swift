@@ -80,12 +80,14 @@ class AdminDetector {
 
             let fullName = getFullName(for: username)
             let accountType = detectAccountType(for: username)
+            let uid = getUID(for: username)
 
             let userInfo = AdminUserInfo(
                 username: username,
                 fullName: fullName,
                 isCurrentUser: username == currentUser,
-                accountType: accountType
+                accountType: accountType,
+                uid: uid
             )
             adminUsers.append(userInfo)
         }
@@ -185,6 +187,31 @@ class AdminDetector {
         }
 
         return username // Fallback to username
+    }
+
+    private func getUID(for username: String) -> String? {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/dscl")
+        task.arguments = [".", "-read", "/Users/\(username)", "UniqueID"]
+
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = Pipe()
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+
+            // Output format: "UniqueID: 502"
+            let uid = output
+                .replacingOccurrences(of: "UniqueID:", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return uid.isEmpty ? nil : uid
+        } catch {
+            return nil
+        }
     }
 
     private func isSystemAccount(_ username: String) -> Bool {

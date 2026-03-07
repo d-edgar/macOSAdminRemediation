@@ -12,65 +12,22 @@ import SwiftUI
 
 struct ReportView: View {
     @EnvironmentObject var appState: AppState
+    let report: SystemReport
     @State private var copied = false
-    @State private var screenshotSaved = false
+    @State private var hasCopied = false
 
     private let config = AppConfiguration.shared
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            header
-
-            // Content — always use ScrollView (matches NagView pattern)
-            ScrollView {
-                if let report = appState.systemReport {
-                    VStack(alignment: .leading, spacing: 20) {
-                        instructions
-                        reportCard(report)
-                        actionButtons(report)
-                        backButton
-                    }
-                    .padding(28)
-                } else {
-                    ProgressView("Generating report...")
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(60)
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                instructions
+                reportCard
+                actionButtons
+                backButton
             }
+            .padding(28)
         }
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        HStack {
-            Button {
-                appState.currentView = .nag
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.left")
-                    Text("Back")
-                }
-                .foregroundColor(.white.opacity(0.7))
-            }
-            .buttonStyle(.plain)
-
-            Spacer()
-
-            Text("Elevation Request Report")
-                .font(.headline)
-                .foregroundColor(.white)
-
-            Spacer()
-
-            // Spacer for symmetry
-            Color.clear.frame(width: 60)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 14)
-        .background(Color.headerBar)
     }
 
     // MARK: - Instructions
@@ -90,16 +47,17 @@ struct ReportView: View {
                 if !config.supportRequestURL.isEmpty, let url = URL(string: config.supportRequestURL) {
                     Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window. Submit your request at:")
                         .font(.callout)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.white.opacity(0.85))
                         .lineSpacing(2)
 
                     Link(config.supportRequestURL, destination: url)
                         .font(.callout)
-                        .foregroundColor(.brandPrimary)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
                 } else {
                     Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window.")
                         .font(.callout)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.white.opacity(0.85))
                         .lineSpacing(2)
                 }
             }
@@ -107,17 +65,17 @@ struct ReportView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.brandPrimary.opacity(0.1))
+                .fill(Color.white.opacity(0.12))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.brandPrimary.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
                 )
         )
     }
 
     // MARK: - Report Card
 
-    private func reportCard(_ report: SystemReport) -> some View {
+    private var reportCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Report title bar
             HStack {
@@ -198,9 +156,16 @@ struct ReportView: View {
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.6))
 
-                            Label(user.accountType.rawValue, systemImage: "key.fill")
+                            Label(user.accountType.rawValue, systemImage: user.accountType == .mobile ? "network" : "desktopcomputer")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.6))
+                                .fontWeight(.medium)
+                                .foregroundColor(user.accountType == .mobile ? .orange : .white.opacity(0.6))
+
+                            if let uid = user.uid {
+                                Label("UID \(uid)", systemImage: "number")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
                         }
                     }
                     .padding(.vertical, 4)
@@ -248,37 +213,54 @@ struct ReportView: View {
 
     // MARK: - Action Buttons
 
-    private func actionButtons(_ report: SystemReport) -> some View {
-        HStack(spacing: 14) {
-            // Copy report to clipboard
-            Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(report.formattedReport, forType: .string)
-                copied = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    copied = false
-                }
-            } label: {
-                HStack {
-                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                    Text(copied ? "Copied!" : "Copy Report to Clipboard")
-                }
-            }
-            .buttonStyle(PrimaryButtonStyle())
-
-            // Open support request URL (only shown when configured)
-            if !config.supportRequestURL.isEmpty {
+    private var actionButtons: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 14) {
+                // Step 1: Copy report to clipboard
                 Button {
-                    if let url = URL(string: config.supportRequestURL) {
-                        NSWorkspace.shared.open(url)
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(report.formattedReport, forType: .string)
+                    copied = true
+                    hasCopied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        copied = false
                     }
                 } label: {
                     HStack {
-                        Image(systemName: "globe")
-                        Text("Open Request Portal")
+                        Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                        Text(copied ? "Copied!" : "Step 1: Copy Report to Clipboard")
                     }
                 }
-                .buttonStyle(SecondaryButtonStyle())
+                .buttonStyle(PrimaryButtonStyle())
+
+                // Step 2: Open support request URL (only enabled after copy, closes app)
+                if !config.supportRequestURL.isEmpty {
+                    Button {
+                        if let url = URL(string: config.supportRequestURL) {
+                            NSWorkspace.shared.open(url)
+                        }
+                        // Close the app after opening the portal
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            NSApplication.shared.terminate(nil)
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "globe")
+                            Text("Step 2: Open Help Desk Portal")
+                        }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .disabled(!hasCopied)
+                    .opacity(hasCopied ? 1.0 : 0.4)
+                }
+            }
+
+            // Hint text when portal is locked
+            if !hasCopied && !config.supportRequestURL.isEmpty {
+                Text("Copy the report first, then open the portal to paste it into your request.")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.4))
+                    .italic()
             }
         }
     }
@@ -286,18 +268,22 @@ struct ReportView: View {
     // MARK: - Back Button
 
     private var backButton: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             Divider()
                 .background(Color.white.opacity(0.1))
 
             Button {
                 appState.currentView = .nag
             } label: {
-                Text("Go Back")
-                    .font(.callout)
-                    .foregroundColor(.white.opacity(0.5))
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                    Text("Go Back")
+                }
+                .font(.callout)
+                .foregroundColor(.white.opacity(0.6))
             }
             .buttonStyle(.plain)
+            .padding(.bottom, 8)
         }
     }
 }

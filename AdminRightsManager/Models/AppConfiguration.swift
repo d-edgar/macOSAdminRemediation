@@ -65,7 +65,7 @@ struct AppConfiguration {
 
     /// URL to the full admin rights policy document (shown as link in header)
     var policyURL: String {
-        defaults.string(forKey: "PolicyURL") ?? ""
+        defaults.string(forKey: "PolicyURL") ?? "https://www.google.com"
     }
 
     /// Custom policy message shown in the nag window

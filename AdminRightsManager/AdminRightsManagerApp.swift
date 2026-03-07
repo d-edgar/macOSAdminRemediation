@@ -18,25 +18,13 @@ struct AdminRightsManagerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .frame(minWidth: 750, minHeight: 680)
+                .frame(width: 750, height: 680)
                 .onAppear {
-                    configureWindow()
+                    NSApplication.shared.activate(ignoringOtherApps: true)
                 }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
-    }
-
-    private func configureWindow() {
-        // Bring app to front when launched (important for nag behavior)
-        NSApplication.shared.activate(ignoringOtherApps: true)
-
-        // Prevent the window from being closed via Cmd+W (force interaction)
-        if let window = NSApplication.shared.windows.first {
-            window.styleMask.remove(.closable)
-            window.level = .floating
-            window.center()
-        }
     }
 }
 
