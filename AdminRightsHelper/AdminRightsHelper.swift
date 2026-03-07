@@ -1,24 +1,24 @@
 #!/usr/bin/env swift
 //
-//  CNUAdminHelper.swift
-//  CNUAdminManager
+//  AdminRightsHelper.swift
+//  AdminRightsManager
 //
 //  Privileged helper tool that runs as a LaunchDaemon (root).
 //  Watches for remediation signals from the main app and performs
 //  the actual admin rights removal using dseditgroup.
 //
-//  This runs as: /Library/PrivilegedHelperTools/com.cnu.adminmanager.helper
-//  Managed by:   /Library/LaunchDaemons/com.cnu.adminmanager.helper.plist
+//  This runs as: /Library/PrivilegedHelperTools/com.adminrights.manager.helper
+//  Managed by:   /Library/LaunchDaemons/com.adminrights.manager.helper.plist
 //
 
 import Foundation
 
 // MARK: - Configuration
 
-let signalDirectory = "/Library/Application Support/CNUAdminManager"
+let signalDirectory = "/Library/Application Support/AdminRightsManager"
 let signalFilePath = "\(signalDirectory)/remediate"
 let resultFilePath = "\(signalDirectory)/result"
-let auditLogPath = "/Library/Logs/CNUAdminManager.log"
+let auditLogPath = "/Library/Logs/AdminRightsManager.log"
 let pollInterval: TimeInterval = 2.0 // Check every 2 seconds
 
 // MARK: - Logging
@@ -153,7 +153,7 @@ func ensureDirectoryExists() {
 }
 
 func watchForSignals() {
-    log("CNUAdminManager Helper started. Watching for remediation signals...")
+    log("AdminRightsManager Helper started. Watching for remediation signals...")
     ensureDirectoryExists()
 
     // Main run loop - watch for the signal file

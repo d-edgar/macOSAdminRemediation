@@ -1,17 +1,17 @@
 //
 //  AppConfiguration.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  Reads managed preferences from Jamf Configuration Profiles.
 //  Admins can customize behavior by deploying a config profile
-//  targeting the preference domain: com.cnu.adminmanager
+//  targeting the preference domain: com.adminrights.manager
 //
 
 import Foundation
 import os.log
 
 struct AppConfiguration {
-    static let bundleIdentifier = "com.cnu.adminmanager"
+    static let bundleIdentifier = "com.adminrights.manager"
     static let shared = AppConfiguration()
 
     private let defaults: UserDefaults
@@ -28,17 +28,44 @@ struct AppConfiguration {
 
     /// Organization name displayed in the nag window
     var organizationName: String {
-        defaults.string(forKey: "OrganizationName") ?? "CNU"
+        defaults.string(forKey: "OrganizationName") ?? "IT Services"
     }
 
-    /// Support URL for submitting elevation requests
-    var supportRequestURL: String {
-        defaults.string(forKey: "SupportRequestURL") ?? "https://support.cnu.edu/admin-request"
+    // MARK: - Support Contact Information
+
+    /// Display name for the support team (e.g., "IT Help Desk", "Tech Support")
+    var supportContactName: String {
+        defaults.string(forKey: "SupportContactName") ?? "IT Help Desk"
+    }
+
+    /// Support phone number displayed in the app
+    var supportPhone: String {
+        defaults.string(forKey: "SupportPhone") ?? "(555) 123-4567"
     }
 
     /// Support email for questions
     var supportEmail: String {
-        defaults.string(forKey: "SupportEmail") ?? "itsupport@cnu.edu"
+        defaults.string(forKey: "SupportEmail") ?? "helpdesk@example.com"
+    }
+
+    /// General IT website/portal URL (e.g., "https://it.example.edu")
+    var supportWebsiteURL: String {
+        defaults.string(forKey: "SupportWebsiteURL") ?? "https://www.google.com"
+    }
+
+    /// URL for submitting admin rights elevation requests (e.g., help desk ticket portal)
+    var supportRequestURL: String {
+        defaults.string(forKey: "SupportRequestURL") ?? "https://www.google.com"
+    }
+
+    /// Returns true if at least one support contact method is configured
+    var hasAnySupportContact: Bool {
+        !supportEmail.isEmpty || !supportWebsiteURL.isEmpty || !supportPhone.isEmpty
+    }
+
+    /// URL to the full admin rights policy document (shown as link in header)
+    var policyURL: String {
+        defaults.string(forKey: "PolicyURL") ?? ""
     }
 
     /// Custom policy message shown in the nag window
@@ -46,8 +73,8 @@ struct AppConfiguration {
         defaults.string(forKey: "PolicyMessage") ??
         """
         Your account currently has administrator privileges on this Mac. \
-        Per CNU IT policy, standard user accounts should not retain persistent \
-        admin rights. This poses a security risk to your device and the university network.
+        Per organizational policy, standard user accounts should not retain persistent \
+        admin rights. This poses a security risk to your device and the network.
         """
     }
 
@@ -93,6 +120,37 @@ struct AppConfiguration {
         return (value as? Bool) ?? true
     }
 
+    // MARK: - Branding — Appearance
+
+    /// Department name shown in the header (e.g., "IT Services", "IT Security", "Help Desk")
+    var departmentName: String {
+        defaults.string(forKey: "DepartmentName") ?? "IT Services"
+    }
+
+    /// Primary brand color hex (e.g., "#1b386d")
+    /// Used for buttons, accents, info boxes
+    var primaryColorHex: String {
+        defaults.string(forKey: "PrimaryColorHex") ?? "#1b386d"
+    }
+
+    /// Secondary/silver brand color hex (e.g., "#84888b")
+    /// Used for secondary buttons and muted UI elements
+    var secondaryColorHex: String {
+        defaults.string(forKey: "SecondaryColorHex") ?? "#84888b"
+    }
+
+    /// Dark brand color hex (e.g., "#172951")
+    /// Used for backgrounds and deep UI surfaces
+    var darkColorHex: String {
+        defaults.string(forKey: "DarkColorHex") ?? "#172951"
+    }
+
+    /// Path to a custom logo image file on disk (PNG recommended)
+    /// If empty or file not found, falls back to the SF Symbol shield icon
+    var logoImagePath: String {
+        defaults.string(forKey: "LogoImagePath") ?? ""
+    }
+
     // MARK: - Jamf Connect Integration
 
     /// Expected Jamf Connect app path for detection
@@ -115,6 +173,6 @@ struct AppConfiguration {
 
     /// Path for the local audit log
     var auditLogPath: String {
-        defaults.string(forKey: "AuditLogPath") ?? "/Library/Logs/CNUAdminManager.log"
+        defaults.string(forKey: "AuditLogPath") ?? "/Library/Logs/AdminRightsManager.log"
     }
 }

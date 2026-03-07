@@ -1,6 +1,6 @@
 //
 //  RemediationService.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  Handles the actual remediation: removing the current user
 //  from the admin group. This requires elevated privileges,
@@ -16,10 +16,10 @@ class RemediationService {
     private let config = AppConfiguration.shared
 
     /// Path to the signal file that tells the privileged helper to act
-    private let remediationSignalPath = "/Library/Application Support/CNUAdminManager/remediate"
+    private let remediationSignalPath = "/Library/Application Support/AdminRightsManager/remediate"
 
     /// Path where the helper writes its result
-    private let remediationResultPath = "/Library/Application Support/CNUAdminManager/result"
+    private let remediationResultPath = "/Library/Application Support/AdminRightsManager/result"
 
     // MARK: - Remediation
 

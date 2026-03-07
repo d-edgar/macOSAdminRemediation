@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║         Admin Rights Manager — Configuration Profile         ║
+    ╚══════════════════════════════════════════════════════════════╝
+
+    This is a TEMPLATE configuration profile with generic
+    placeholder values. You MUST update all fields marked with
+    "CHANGE THIS" before deploying to your environment.
+
+    DEPLOYMENT:
+      1. Update all values marked "CHANGE THIS" below
+      2. Generate new PayloadUUID values (use `uuidgen` in Terminal)
+      3. Upload to Jamf Pro as a Custom Settings profile
+      4. Target the same smart group as the Admin Rights Manager PKG
+
+    Preference Domain: com.adminrights.manager
+
+    All keys are optional — the app uses generic defaults for
+    anything not specified. However, you SHOULD configure at
+    minimum: OrganizationName, SupportContactName, SupportEmail,
+    and PolicyMessage to match your organization.
+-->
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadType</key>
+            <string>com.adminrights.manager</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>PayloadIdentifier</key>
+            <string>com.adminrights.manager.settings</string>
+
+            <!-- ⚠️  CHANGE THIS: Generate a new UUID with `uuidgen` in Terminal -->
+            <key>PayloadUUID</key>
+            <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
+
+            <key>PayloadDisplayName</key>
+            <string>Admin Rights Manager Settings</string>
+            <key>PayloadDescription</key>
+            <string>Configures the Admin Rights Management tool behavior, branding, and remediation options.</string>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  ORGANIZATION IDENTITY                            -->
+            <!--  These values identify your org in the app UI.    -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- ⚠️  CHANGE THIS: Your organization's short name -->
+            <!-- Shown in the header bar: "[OrgName] [DepartmentName]" -->
+            <!-- Examples: "Virginia Tech", "Acme Corp", "Example University" -->
+            <key>OrganizationName</key>
+            <string>Your Organization</string>
+
+            <!-- ⚠️  CHANGE THIS: The department name shown in the header -->
+            <!-- Appears after org name: "Your Organization IT Services" -->
+            <!-- If same as OrganizationName, only one will be shown -->
+            <!-- Examples: "IT Services", "IT Security", "Help Desk", "Technology" -->
+            <key>DepartmentName</key>
+            <string>IT Services</string>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  SUPPORT CONTACT INFORMATION                      -->
+            <!--  How users can reach your team for help.          -->
+            <!--  Only configured fields are shown in the UI —     -->
+            <!--  leave a field empty to hide it.                  -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- ⚠️  CHANGE THIS: Display name for your support team -->
+            <!-- Shown in the footer: "Need help? Contact [this value]" -->
+            <!-- Also used on the error screen button label -->
+            <key>SupportContactName</key>
+            <string>IT Help Desk</string>
+
+            <!-- ⚠️  CHANGE THIS: Phone number users can call -->
+            <!-- Shown as a clickable tel: link in the footer -->
+            <!-- Leave empty to hide the phone option -->
+            <key>SupportPhone</key>
+            <string>(555) 123-4567</string>
+
+            <!-- ⚠️  CHANGE THIS: Email address for support -->
+            <!-- Shown as a clickable mailto: link in the footer -->
+            <!-- Leave empty to hide the email option -->
+            <key>SupportEmail</key>
+            <string>helpdesk@example.edu</string>
+
+            <!-- ⚠️  CHANGE THIS: Your IT department's main website -->
+            <!-- Shown as a clickable "Website" link in the footer -->
+            <!-- Leave empty to hide the website option -->
+            <key>SupportWebsiteURL</key>
+            <string>https://it.example.edu</string>
+
+            <!-- ⚠️  CHANGE THIS: URL where users submit elevation requests -->
+            <!-- This is the link behind the "Open Request Portal" button -->
+            <!-- on the diagnostic report screen -->
+            <!-- Leave empty to hide the button -->
+            <key>SupportRequestURL</key>
+            <string>https://helpdesk.example.edu/request</string>
+
+            <!-- ⚠️  CHANGE THIS: URL to your admin rights policy document -->
+            <!-- Shown as a clickable "Admin Rights Policy" link in the header -->
+            <!-- Leave empty to show plain text instead of a link -->
+            <key>PolicyURL</key>
+            <string>https://it.example.edu/policies/admin-rights</string>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  POLICY MESSAGE                                   -->
+            <!--  The warning text shown to users explaining why   -->
+            <!--  they need to remediate. Write this in your       -->
+            <!--  organization's voice.                            -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- ⚠️  CHANGE THIS: Customize the policy warning for your org -->
+            <key>PolicyMessage</key>
+            <string>Your account currently has administrator privileges on this Mac. Per organizational policy, standard user accounts should not retain persistent admin rights. This poses a security risk to your device and the network. Please remediate below or submit a request if you require elevated access for your role.</string>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  APPEARANCE / BRAND COLORS                        -->
+            <!--  Set your organization's colors as hex values.    -->
+            <!--  The app derives all UI colors from these three.  -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- ⚠️  CHANGE THIS: Your primary brand color (hex) -->
+            <!-- Used for: buttons, accent elements, info box borders -->
+            <!-- Tip: Use your org's main brand color -->
+            <key>PrimaryColorHex</key>
+            <string>#1b386d</string>
+
+            <!-- ⚠️  CHANGE THIS: Your secondary/neutral color (hex) -->
+            <!-- Used for: secondary buttons, muted UI elements -->
+            <!-- Tip: A silver/gray works well here -->
+            <key>SecondaryColorHex</key>
+            <string>#84888b</string>
+
+            <!-- ⚠️  CHANGE THIS: Your dark brand color (hex) -->
+            <!-- Used for: window background gradient, header bar, card panels -->
+            <!-- Tip: A very dark version of your primary color works best -->
+            <key>DarkColorHex</key>
+            <string>#172951</string>
+
+            <!-- Path to a custom logo image file on disk (PNG, transparent bg recommended) -->
+            <!-- The PKG should install this file alongside the app -->
+            <!-- Example: /Library/Application Support/AdminRightsManager/logo.png -->
+            <!-- Leave empty to use the default shield icon -->
+            <key>LogoImagePath</key>
+            <string></string>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  BEHAVIOR SETTINGS                                -->
+            <!--  These control how the tool behaves. The defaults -->
+            <!--  work well for most deployments — only change     -->
+            <!--  if you have specific requirements.               -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- How often the nag appears, in seconds (display only) -->
+            <!-- The actual interval is controlled by the LaunchAgent plist -->
+            <!-- Default: 14400 (4 hours) -->
+            <key>NagIntervalSeconds</key>
+            <integer>14400</integer>
+
+            <!-- Can users close the window without choosing an action? -->
+            <!-- false = window stays floating until they click Remediate or Submit Request -->
+            <!-- true = users can dismiss and will be reminded at next interval -->
+            <key>AllowDeferral</key>
+            <false/>
+
+            <!-- Days before forced remediation (0 = nag only, never force) -->
+            <key>GracePeriodDays</key>
+            <integer>0</integer>
+
+            <!-- Show the "Submit Request" button? -->
+            <!-- Set to false if you ONLY want users to remediate (no request option) -->
+            <key>ShowSubmitRequestOption</key>
+            <true/>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  JAMF CONNECT INTEGRATION                         -->
+            <!--  Used to detect Jamf Connect for the diagnostic   -->
+            <!--  report. Only change if non-standard install.     -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- Path to Jamf Connect app (for detection in the report) -->
+            <key>JamfConnectAppPath</key>
+            <string>/Applications/Jamf Connect.app</string>
+
+            <!-- Jamf Connect elevation workflow URL (optional, leave empty if unused) -->
+            <key>JamfConnectElevationURL</key>
+            <string></string>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!--  AUDIT LOGGING                                    -->
+            <!--  Local log file for compliance/audit trail.       -->
+            <!--  Defaults are fine for most deployments.          -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- Write a local audit log of all actions? -->
+            <key>EnableLocalAuditLog</key>
+            <true/>
+
+            <!-- Where to write the audit log -->
+            <key>AuditLogPath</key>
+            <string>/Library/Logs/AdminRightsManager.log</string>
+        </dict>
+    </array>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  PROFILE METADATA                                     -->
+    <!--  ⚠️  CHANGE the PayloadOrganization and generate     -->
+    <!--  a new PayloadUUID before deploying.                  -->
+    <!-- ══════════════════════════════════════════════════════ -->
+
+    <key>PayloadDisplayName</key>
+    <string>Admin Rights Manager Configuration</string>
+    <key>PayloadIdentifier</key>
+    <string>com.adminrights.manager.profile</string>
+
+    <!-- ⚠️  CHANGE THIS: Your organization's full name -->
+    <key>PayloadOrganization</key>
+    <string>Your Organization Name</string>
+
+    <key>PayloadScope</key>
+    <string>System</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+
+    <!-- ⚠️  CHANGE THIS: Generate a new UUID with `uuidgen` in Terminal -->
+    <key>PayloadUUID</key>
+    <string>F1E2D3C4-B5A6-7890-FEDC-BA0987654321</string>
+
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

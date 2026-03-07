@@ -1,6 +1,6 @@
 //
 //  ReportView.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  Displays the diagnostic system report after the user clicks
 //  "Submit Request". The report is formatted for easy copy/paste
@@ -22,21 +22,22 @@ struct ReportView: View {
             // Header
             header
 
-            if let report = appState.systemReport {
-                ScrollView {
-                    VStack(spacing: 20) {
+            // Content — always use ScrollView (matches NagView pattern)
+            ScrollView {
+                if let report = appState.systemReport {
+                    VStack(alignment: .leading, spacing: 20) {
                         instructions
                         reportCard(report)
                         actionButtons(report)
                         backButton
                     }
                     .padding(28)
+                } else {
+                    ProgressView("Generating report...")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(60)
                 }
-            } else {
-                Spacer()
-                ProgressView("Generating report...")
-                    .foregroundColor(.white)
-                Spacer()
             }
         }
     }
@@ -69,7 +70,7 @@ struct ReportView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
-        .background(Color(red: 0.12, green: 0.12, blue: 0.18))
+        .background(Color.headerBar)
     }
 
     // MARK: - Instructions
@@ -77,7 +78,7 @@ struct ReportView: View {
     private var instructions: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "info.circle.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.brandPrimary)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -86,25 +87,30 @@ struct ReportView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
 
-                Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window. Submit your request at:")
-                    .font(.callout)
-                    .foregroundColor(.white.opacity(0.7))
-                    .lineSpacing(2)
+                if !config.supportRequestURL.isEmpty, let url = URL(string: config.supportRequestURL) {
+                    Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window. Submit your request at:")
+                        .font(.callout)
+                        .foregroundColor(.white.opacity(0.7))
+                        .lineSpacing(2)
 
-                if let url = URL(string: config.supportRequestURL) {
                     Link(config.supportRequestURL, destination: url)
                         .font(.callout)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.brandPrimary)
+                } else {
+                    Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window.")
+                        .font(.callout)
+                        .foregroundColor(.white.opacity(0.7))
+                        .lineSpacing(2)
                 }
             }
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color.brandPrimary.opacity(0.1))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.brandPrimary.opacity(0.2), lineWidth: 1)
                 )
         )
     }
@@ -203,7 +209,7 @@ struct ReportView: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(red: 0.08, green: 0.10, blue: 0.16))
+                .fill(Color.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
@@ -258,20 +264,22 @@ struct ReportView: View {
                     Text(copied ? "Copied!" : "Copy Report to Clipboard")
                 }
             }
-            .buttonStyle(CNUPrimaryButtonStyle())
+            .buttonStyle(PrimaryButtonStyle())
 
-            // Open support request URL
-            Button {
-                if let url = URL(string: config.supportRequestURL) {
-                    NSWorkspace.shared.open(url)
+            // Open support request URL (only shown when configured)
+            if !config.supportRequestURL.isEmpty {
+                Button {
+                    if let url = URL(string: config.supportRequestURL) {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "globe")
+                        Text("Open Request Portal")
+                    }
                 }
-            } label: {
-                HStack {
-                    Image(systemName: "globe")
-                    Text("Open Request Portal")
-                }
+                .buttonStyle(SecondaryButtonStyle())
             }
-            .buttonStyle(CNUSecondaryButtonStyle())
         }
     }
 

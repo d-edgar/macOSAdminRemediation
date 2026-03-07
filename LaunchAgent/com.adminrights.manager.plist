@@ -2,12 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <!--
-    LaunchAgent for CNUAdminManager nag cycle.
+    LaunchAgent for AdminRightsManager nag cycle.
     Launches the app every 4 hours (14400 seconds) for the
     currently logged-in user. The app checks if the user has
     admin rights; if not, it quits immediately.
 
-    Install to: /Library/LaunchAgents/com.cnu.adminmanager.plist
+    Install to: /Library/LaunchAgents/com.adminrights.manager.plist
 
     NOTE: The StartInterval can be overridden via Jamf config profile
     by setting the NagIntervalSeconds key in the managed preferences.
@@ -16,13 +16,13 @@
 -->
 <dict>
     <key>Label</key>
-    <string>com.cnu.adminmanager</string>
+    <string>com.adminrights.manager</string>
 
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/open</string>
         <string>-a</string>
-        <string>/Library/Application Support/CNUAdminManager/CNUAdminManager.app</string>
+        <string>/Library/Application Support/AdminRightsManager/AdminRightsManager.app</string>
     </array>
 
     <!-- Launch every 4 hours (14400 seconds) -->

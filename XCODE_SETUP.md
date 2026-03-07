@@ -1,132 +1,118 @@
-# CNUAdminManager — Xcode Project Setup Guide
+# Admin Rights Manager — Xcode Project Setup Guide
 
-## Creating the Xcode Project
+## Quick Start (xcodegen)
+
+```bash
+# Install xcodegen if you don't have it
+brew install xcodegen
+
+# Generate the Xcode project from the repo root
+xcodegen generate
+
+# Open the project
+open AdminRightsManager.xcodeproj
+```
+
+This generates a project with two targets already wired up:
+- **AdminRightsManager** — the SwiftUI app
+- **com.adminrights.manager.helper** — the privileged helper (LaunchDaemon)
+
+## Manual Xcode Setup (alternative)
 
 ### Step 1: Create the Project
 1. Open Xcode → **File → New → Project**
 2. Choose **macOS → App**
 3. Settings:
-   - Product Name: `CNUAdminManager`
+   - Product Name: `AdminRightsManager`
    - Team: Your Apple Developer team
-   - Organization Identifier: `com.cnu`
+   - Organization Identifier: `com.adminrights`
    - Interface: **SwiftUI**
    - Language: **Swift**
-   - Uncheck: Include Tests (add later if desired)
-4. Save to your git repo directory
+4. Save to your repo directory
 
 ### Step 2: Add the App Source Files
-Drag these folders/files into the `CNUAdminManager` target in Xcode:
-- `CNUAdminManager/CNUAdminManagerApp.swift` (replace the generated one)
-- `CNUAdminManager/ContentView.swift` (replace the generated one)
-- `CNUAdminManager/Views/` (entire folder)
-- `CNUAdminManager/Services/` (entire folder)
-- `CNUAdminManager/Models/` (entire folder)
-- `CNUAdminManager/Info.plist`
+Drag these into the `AdminRightsManager` target:
+- `AdminRightsManager/AdminRightsManagerApp.swift`
+- `AdminRightsManager/ContentView.swift`
+- `AdminRightsManager/Views/`
+- `AdminRightsManager/Services/`
+- `AdminRightsManager/Models/`
+- `AdminRightsManager/Info.plist`
 
 ### Step 3: Add the Privileged Helper Target
 1. **File → New → Target**
 2. Choose **macOS → Command Line Tool**
-3. Settings:
-   - Product Name: `com.cnu.adminmanager.helper`
-   - Language: **Swift**
-4. Replace the generated `main.swift` with `CNUAdminHelper/CNUAdminHelper.swift`
-5. Set the helper's **Build Settings**:
+3. Product Name: `com.adminrights.manager.helper`
+4. Replace `main.swift` with `AdminRightsHelper/AdminRightsHelper.swift`
+5. Set Build Settings:
    - `INSTALL_PATH` = `/Library/PrivilegedHelperTools`
    - `SKIP_INSTALL` = `No`
 
-### Step 4: Configure Build Settings
-
-#### App Target:
-- **Signing & Capabilities**: Sign with your Developer ID
-- **Info.plist**: Point to `CNUAdminManager/Info.plist`
-- **Deployment Target**: macOS 13.0+
-- **Build Settings → Other Linker Flags**: Add `-framework IOKit`
-
-#### Helper Target:
-- **Signing & Capabilities**: Sign with your Developer ID
-- **Deployment Target**: macOS 13.0+
-- **Product Name**: `com.cnu.adminmanager.helper`
-
-### Step 5: Framework Dependencies
-The app uses these system frameworks (most are automatic with SwiftUI):
-- `SwiftUI`
-- `Foundation`
-- `IOKit` (for serial number — add manually if needed)
-- `OpenDirectory` (for account type detection)
-- `os.log` (for unified logging)
-
+### Step 4: Framework Dependencies
 Add any missing frameworks: Target → Build Phases → Link Binary With Libraries
+- `IOKit` (for serial number)
+- `OpenDirectory` (for account type detection)
 
 ## Building the PKG
 
-### Prerequisites
-- Xcode command line tools: `xcode-select --install`
-- Developer ID signing certificate
-
-### Build Steps
 ```bash
-# 1. Build both targets in Release mode
-xcodebuild -scheme CNUAdminManager -configuration Release build
-xcodebuild -scheme com.cnu.adminmanager.helper -configuration Release build
+# Build both targets in Release mode
+xcodebuild -scheme AdminRightsManager -configuration Release build
+xcodebuild -scheme com.adminrights.manager.helper -configuration Release build
 
-# 2. Run the PKG builder
+# Build the PKG
 ./Scripts/build-pkg.sh 1.0.0
 ```
 
-The PKG will be output to `./build/CNUAdminManager-1.0.0.pkg`
+Output: `./build/AdminRightsManager-1.0.0.pkg`
 
 ## Jamf Pro Deployment
 
 ### Smart Groups
 
-#### Smart Group 1: "Admin Users - Needs Remediation"
-Criteria: Local Account is admin = Yes (use an Extension Attribute or Jamf inventory)
+**Smart Group 1: "Admin Users - Needs Remediation"**
+Criteria: Local account has admin rights (via Extension Attribute)
 
-#### Smart Group 2: "Admin Users - Remediated"
-Criteria: Local Account is admin = No (inverse of above)
+**Smart Group 2: "Admin Users - Remediated"**
+Criteria: Local account does NOT have admin rights
 
-### Policy 1: Deploy CNUAdminManager
-- Trigger: Recurring Check-in
-- Scope: Smart Group 1 ("Admin Users - Needs Remediation")
-- Packages: Upload `CNUAdminManager-1.0.0.pkg`
-- Frequency: Once per computer
+### Policies
 
-### Policy 2: Deploy Configuration Profile
-- Scope: Smart Group 1
-- Configuration Profile: Upload `ConfigProfile/com.cnu.adminmanager.mobileconfig`
-  OR create a Custom Settings profile with the keys from the example
-
-### Policy 3: Uninstall (Cleanup)
-- Trigger: Recurring Check-in
-- Scope: Smart Group 2 ("Admin Users - Remediated")
-- Scripts: Upload `Scripts/uninstall.sh`
-- Frequency: Once per computer
+| Policy | Trigger | Scope | Payload |
+|--------|---------|-------|---------|
+| Deploy | Recurring Check-in | Smart Group 1 | `AdminRightsManager-1.0.0.pkg` |
+| Configure | Recurring Check-in | Smart Group 1 | Config profile (`.mobileconfig`) |
+| Uninstall | Recurring Check-in | Smart Group 2 | `Scripts/uninstall.sh` |
 
 ## File Locations on Target Macs
 
 | Component | Path |
 |-----------|------|
-| App | `/Library/Application Support/CNUAdminManager/CNUAdminManager.app` |
-| Helper | `/Library/PrivilegedHelperTools/com.cnu.adminmanager.helper` |
-| LaunchDaemon | `/Library/LaunchDaemons/com.cnu.adminmanager.helper.plist` |
-| LaunchAgent | `/Library/LaunchAgents/com.cnu.adminmanager.plist` |
-| Audit Log | `/Library/Logs/CNUAdminManager.log` |
-| Signal Dir | `/Library/Application Support/CNUAdminManager/` |
+| App | `/Library/Application Support/AdminRightsManager/AdminRightsManager.app` |
+| Helper | `/Library/PrivilegedHelperTools/com.adminrights.manager.helper` |
+| LaunchDaemon | `/Library/LaunchDaemons/com.adminrights.manager.helper.plist` |
+| LaunchAgent | `/Library/LaunchAgents/com.adminrights.manager.plist` |
+| Audit Log | `/Library/Logs/AdminRightsManager.log` |
 
 ## Configuration Profile Keys
 
-All keys are optional. Set them via Jamf Custom Settings targeting domain `com.cnu.adminmanager`:
+All keys are optional. Deploy via Jamf Custom Settings targeting domain `com.adminrights.manager`:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | OrganizationName | String | CNU | Org name in UI |
-| SupportRequestURL | String | https://support.cnu.edu/admin-request | Ticket submission URL |
+| DepartmentName | String | IT Services | Department shown in header |
+| PrimaryColorHex | String | #1b386d | Primary brand color |
+| SecondaryColorHex | String | #84888b | Secondary brand color |
+| DarkColorHex | String | #172951 | Dark background color |
+| LogoImagePath | String | (empty) | Path to custom logo PNG |
+| SupportRequestURL | String | (HelpSpot URL) | Ticket portal URL |
 | SupportEmail | String | itsupport@cnu.edu | Support contact email |
-| PolicyMessage | String | (default text) | Custom policy warning |
+| PolicyMessage | String | (default text) | Policy warning message |
 | NagIntervalSeconds | Integer | 14400 | Display interval (info only) |
 | AllowDeferral | Boolean | false | Let users close without acting |
 | GracePeriodDays | Integer | 0 | Days before forced remediation |
 | ShowSubmitRequestOption | Boolean | true | Show "Submit Request" button |
 | JamfConnectAppPath | String | /Applications/Jamf Connect.app | Path to detect Jamf Connect |
 | EnableLocalAuditLog | Boolean | true | Write local audit log |
-| AuditLogPath | String | /Library/Logs/CNUAdminManager.log | Audit log location |
+| AuditLogPath | String | /Library/Logs/AdminRightsManager.log | Audit log location |

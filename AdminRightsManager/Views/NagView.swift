@@ -1,6 +1,6 @@
 //
 //  NagView.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  The main nag screen displayed to users who have admin rights.
 //  Shows a policy warning and presents two options:
@@ -43,27 +43,60 @@ struct NagView: View {
         }
     }
 
+    // MARK: - Header Title
+
+    /// Combines org name and department name, avoiding duplication
+    /// when both are set to the same value.
+    private var headerTitle: String {
+        let org = config.organizationName
+        let dept = config.departmentName
+        if org.lowercased() == dept.lowercased() || dept.isEmpty {
+            return org
+        }
+        return "\(org) \(dept)"
+    }
+
     // MARK: - Header
 
     private var headerBanner: some View {
         HStack {
-            Image(systemName: "shield.lefthalf.filled.badge.checkmark")
-                .font(.title2)
-                .foregroundColor(.white)
+            // Custom logo from config profile, or fallback SF Symbol
+            if let logoImage = loadLogoImage() {
+                Image(nsImage: logoImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 24)
+            } else {
+                Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                    .font(.title2)
+                    .foregroundColor(.white)
+            }
 
-            Text("\(config.organizationName) IT Security")
+            Text(headerTitle)
                 .font(.headline)
                 .foregroundColor(.white)
 
             Spacer()
 
-            Text("Admin Rights Policy")
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.7))
+            if !config.policyURL.isEmpty, let url = URL(string: config.policyURL) {
+                Link(destination: url) {
+                    HStack(spacing: 4) {
+                        Text("Admin Rights Policy")
+                            .font(.subheadline)
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.white.opacity(0.7))
+                }
+            } else {
+                Text("Admin Rights Policy")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.7))
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
-        .background(Color(red: 0.12, green: 0.12, blue: 0.18))
+        .background(Color.headerBar)
     }
 
     // MARK: - Warning Icon
@@ -109,7 +142,7 @@ struct NagView: View {
             // Info box
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.brandPrimary)
                     .font(.title3)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -127,10 +160,10 @@ struct NagView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.brandPrimary.opacity(0.1))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.brandPrimary.opacity(0.2), lineWidth: 1)
                     )
             )
         }
@@ -153,7 +186,7 @@ struct NagView: View {
                 }
                 .frame(maxWidth: 480)
             }
-            .buttonStyle(CNUDangerButtonStyle())
+            .buttonStyle(DangerButtonStyle())
 
             // Secondary action: Submit Request
             if config.showSubmitRequestOption {
@@ -174,7 +207,7 @@ struct NagView: View {
                     }
                     .frame(maxWidth: 480)
                 }
-                .buttonStyle(CNUSecondaryButtonStyle())
+                .buttonStyle(SecondaryButtonStyle())
                 .disabled(appState.isLoading)
             }
         }
@@ -183,19 +216,59 @@ struct NagView: View {
     // MARK: - Support Info
 
     private var supportInfo: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Divider()
                 .background(Color.white.opacity(0.1))
-                .padding(.bottom, 8)
+                .padding(.bottom, 4)
 
-            Text("Questions? Contact \(config.supportEmail)")
+            Text("Need help? Contact \(config.supportContactName)")
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.4))
+                .fontWeight(.medium)
+                .foregroundColor(.white.opacity(0.5))
 
-            Text("This tool is managed by \(config.organizationName) IT")
+            // Contact methods — only show configured ones
+            HStack(spacing: 16) {
+                if !config.supportPhone.isEmpty {
+                    Link(destination: URL(string: "tel:\(config.supportPhone)")!) {
+                        Label(config.supportPhone, systemImage: "phone.fill")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                }
+
+                if !config.supportEmail.isEmpty {
+                    Link(destination: URL(string: "mailto:\(config.supportEmail)")!) {
+                        Label(config.supportEmail, systemImage: "envelope.fill")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                }
+
+                if !config.supportWebsiteURL.isEmpty {
+                    if let url = URL(string: config.supportWebsiteURL) {
+                        Link(destination: url) {
+                            Label("Website", systemImage: "globe")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.4))
+                        }
+                    }
+                }
+            }
+
+            Text("This tool is managed by \(headerTitle)")
                 .font(.caption2)
                 .foregroundColor(.white.opacity(0.3))
         }
+    }
+
+    // MARK: - Logo Loader
+
+    /// Loads a custom logo from the path specified in the config profile.
+    /// Returns nil if no path is set or the file doesn't exist.
+    private func loadLogoImage() -> NSImage? {
+        let path = config.logoImagePath
+        guard !path.isEmpty else { return nil }
+        return NSImage(contentsOfFile: path)
     }
 
     // MARK: - Actions

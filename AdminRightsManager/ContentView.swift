@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  Root view that routes between the nag screen, report view,
 //  remediation progress, and completion states.
@@ -13,37 +13,42 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Background gradient
+            // Background gradient — brand colors from config profile
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color(red: 0.05, green: 0.10, blue: 0.20),
-                    Color(red: 0.08, green: 0.15, blue: 0.28)
+                    .backgroundTop,
+                    .backgroundBottom
                 ]),
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
 
-            VStack {
+            Group {
                 switch appState.currentView {
                 case .nag:
                     NagView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                         .transition(.opacity)
 
                 case .report:
                     ReportView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                         .transition(.move(edge: .trailing))
 
                 case .remediating:
                     RemediatingView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .transition(.opacity)
 
                 case .remediationComplete:
                     RemediationCompleteView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .transition(.scale)
 
                 case .error(let message):
                     ErrorView(message: message)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .transition(.opacity)
                 }
             }
@@ -100,7 +105,7 @@ struct RemediationCompleteView: View {
                 .fontWeight(.bold)
                 .foregroundColor(.white)
 
-            Text("Your admin privileges have been removed.\nYour account is now a standard user and compliant with CNU policy.")
+            Text("Your admin privileges have been removed.\nYour account is now a standard user and compliant with \(AppConfiguration.shared.organizationName) policy.")
                 .font(.body)
                 .foregroundColor(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
@@ -115,7 +120,7 @@ struct RemediationCompleteView: View {
             Button("Close") {
                 NSApplication.shared.terminate(nil)
             }
-            .buttonStyle(CNUPrimaryButtonStyle())
+            .buttonStyle(PrimaryButtonStyle())
             .padding(.top, 8)
         }
         .padding(40)
@@ -149,14 +154,24 @@ struct ErrorView: View {
                 Button("Try Again") {
                     appState.currentView = .nag
                 }
-                .buttonStyle(CNUSecondaryButtonStyle())
+                .buttonStyle(SecondaryButtonStyle())
 
-                Button("Contact IT Support") {
-                    if let url = URL(string: "mailto:\(AppConfiguration.shared.supportEmail)") {
-                        NSWorkspace.shared.open(url)
+                if AppConfiguration.shared.hasAnySupportContact {
+                    Button("Contact \(AppConfiguration.shared.supportContactName)") {
+                        let config = AppConfiguration.shared
+                        if !config.supportEmail.isEmpty,
+                           let url = URL(string: "mailto:\(config.supportEmail)") {
+                            NSWorkspace.shared.open(url)
+                        } else if !config.supportWebsiteURL.isEmpty,
+                                  let url = URL(string: config.supportWebsiteURL) {
+                            NSWorkspace.shared.open(url)
+                        } else if !config.supportPhone.isEmpty,
+                                  let url = URL(string: "tel:\(config.supportPhone)") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
+                    .buttonStyle(PrimaryButtonStyle())
                 }
-                .buttonStyle(CNUPrimaryButtonStyle())
             }
             .padding(.top, 8)
         }
@@ -166,7 +181,7 @@ struct ErrorView: View {
 
 // MARK: - Custom Button Styles
 
-struct CNUPrimaryButtonStyle: ButtonStyle {
+struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
@@ -175,13 +190,13 @@ struct CNUPrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.blue)
+                    .fill(Color.brandPrimary)
                     .opacity(configuration.isPressed ? 0.7 : 1.0)
             )
     }
 }
 
-struct CNUSecondaryButtonStyle: ButtonStyle {
+struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
@@ -190,16 +205,16 @@ struct CNUSecondaryButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .stroke(Color.brandSecondary.opacity(0.4), lineWidth: 1)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.white.opacity(configuration.isPressed ? 0.15 : 0.08))
+                            .fill(Color.brandSecondary.opacity(configuration.isPressed ? 0.2 : 0.1))
                     )
             )
     }
 }
 
-struct CNUDangerButtonStyle: ButtonStyle {
+struct DangerButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
@@ -208,7 +223,7 @@ struct CNUDangerButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.red)
+                    .fill(Color.brandPrimary)
                     .opacity(configuration.isPressed ? 0.7 : 1.0)
             )
     }

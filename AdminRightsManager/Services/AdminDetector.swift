@@ -1,6 +1,6 @@
 //
 //  AdminDetector.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  Detects admin users on the system by querying the local
 //  directory service. Identifies account types (local, mobile, network)

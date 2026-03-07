@@ -1,6 +1,6 @@
 //
 //  SystemInfoGatherer.swift
-//  CNUAdminManager
+//  AdminRightsManager
 //
 //  Gathers system-level information for the diagnostic report:
 //  macOS version, hardware, Jamf Connect status, enrollment, etc.

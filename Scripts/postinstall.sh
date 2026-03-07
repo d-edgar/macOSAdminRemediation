@@ -1,21 +1,21 @@
 #!/bin/bash
 #
 # postinstall.sh
-# CNUAdminManager PKG Postinstall Script
+# AdminRightsManager PKG Postinstall Script
 #
 # This script runs after the PKG installs files to disk.
 # It sets up the LaunchDaemon, LaunchAgent, and ensures
 # correct permissions.
 #
 
-INSTALL_BASE="/Library/Application Support/CNUAdminManager"
-APP_PATH="${INSTALL_BASE}/CNUAdminManager.app"
-HELPER_PATH="/Library/PrivilegedHelperTools/com.cnu.adminmanager.helper"
-DAEMON_PLIST="/Library/LaunchDaemons/com.cnu.adminmanager.helper.plist"
-AGENT_PLIST="/Library/LaunchAgents/com.cnu.adminmanager.plist"
+INSTALL_BASE="/Library/Application Support/AdminRightsManager"
+APP_PATH="${INSTALL_BASE}/AdminRightsManager.app"
+HELPER_PATH="/Library/PrivilegedHelperTools/com.adminrights.manager.helper"
+DAEMON_PLIST="/Library/LaunchDaemons/com.adminrights.manager.helper.plist"
+AGENT_PLIST="/Library/LaunchAgents/com.adminrights.manager.plist"
 LOG_DIR="/Library/Logs"
 
-echo "CNUAdminManager: Starting postinstall..."
+echo "AdminRightsManager: Starting postinstall..."
 
 # ─── Ensure directories exist ───────────────────────────────────
 mkdir -p "${INSTALL_BASE}"
@@ -44,7 +44,7 @@ mkdir -p "${INSTALL_BASE}"
 chmod 777 "${INSTALL_BASE}"
 
 # ─── Load the LaunchDaemon (privileged helper) ──────────────────
-echo "CNUAdminManager: Loading LaunchDaemon..."
+echo "AdminRightsManager: Loading LaunchDaemon..."
 
 # Unload first if already loaded (upgrade scenario)
 /bin/launchctl bootout system "${DAEMON_PLIST}" 2>/dev/null
@@ -53,13 +53,13 @@ echo "CNUAdminManager: Loading LaunchDaemon..."
 /bin/launchctl bootstrap system "${DAEMON_PLIST}"
 
 if [ $? -eq 0 ]; then
-    echo "CNUAdminManager: LaunchDaemon loaded successfully"
+    echo "AdminRightsManager: LaunchDaemon loaded successfully"
 else
-    echo "CNUAdminManager: WARNING - Failed to load LaunchDaemon"
+    echo "AdminRightsManager: WARNING - Failed to load LaunchDaemon"
 fi
 
 # ─── Load the LaunchAgent for the current console user ──────────
-echo "CNUAdminManager: Loading LaunchAgent..."
+echo "AdminRightsManager: Loading LaunchAgent..."
 
 CONSOLE_USER=$(/usr/sbin/scutil <<< "show State:/Users/ConsoleUser" | /usr/bin/awk '/Name :/ { print $3 }')
 CONSOLE_UID=$(/usr/bin/id -u "${CONSOLE_USER}" 2>/dev/null)
@@ -72,17 +72,17 @@ if [ -n "${CONSOLE_USER}" ] && [ "${CONSOLE_USER}" != "loginwindow" ] && [ -n "$
     /bin/launchctl bootstrap gui/"${CONSOLE_UID}" "${AGENT_PLIST}"
 
     if [ $? -eq 0 ]; then
-        echo "CNUAdminManager: LaunchAgent loaded for user ${CONSOLE_USER} (UID ${CONSOLE_UID})"
+        echo "AdminRightsManager: LaunchAgent loaded for user ${CONSOLE_USER} (UID ${CONSOLE_UID})"
     else
-        echo "CNUAdminManager: WARNING - Failed to load LaunchAgent for ${CONSOLE_USER}"
+        echo "AdminRightsManager: WARNING - Failed to load LaunchAgent for ${CONSOLE_USER}"
     fi
 
     # Launch the app immediately for the first-run experience
-    echo "CNUAdminManager: Launching app for first-run..."
+    echo "AdminRightsManager: Launching app for first-run..."
     /usr/bin/sudo -u "${CONSOLE_USER}" /usr/bin/open "${APP_PATH}" &
 else
-    echo "CNUAdminManager: No console user detected. LaunchAgent will load at next login."
+    echo "AdminRightsManager: No console user detected. LaunchAgent will load at next login."
 fi
 
-echo "CNUAdminManager: Postinstall complete"
+echo "AdminRightsManager: Postinstall complete"
 exit 0

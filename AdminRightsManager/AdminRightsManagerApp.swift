@@ -1,8 +1,8 @@
 //
-//  CNUAdminManagerApp.swift
-//  CNUAdminManager
+//  AdminRightsManagerApp.swift
+//  AdminRightsManager
 //
-//  CNU Admin Rights Management Tool
+//  Admin Rights Management Tool
 //  Deployed via Jamf Pro to enforce admin rights policy compliance.
 //
 
@@ -10,7 +10,7 @@ import SwiftUI
 import os.log
 
 @main
-struct CNUAdminManagerApp: App {
+struct AdminRightsManagerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
 
@@ -18,7 +18,7 @@ struct CNUAdminManagerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .frame(minWidth: 700, minHeight: 520)
+                .frame(minWidth: 750, minHeight: 680)
                 .onAppear {
                     configureWindow()
                 }
@@ -46,7 +46,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let logger = Logger(subsystem: AppConfiguration.bundleIdentifier, category: "AppDelegate")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        logger.info("CNUAdminManager launched")
+        logger.info("AdminRightsManager launched")
 
         // Check if the current user actually has admin rights
         // If they don't (already remediated), quit gracefully
