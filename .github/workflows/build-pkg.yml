@@ -180,12 +180,30 @@ jobs:
           PKG_PATH="./build/AdminRightsManager-${VERSION}.pkg"
 
           echo "Submitting for notarization..."
-          xcrun notarytool submit "$PKG_PATH" \
+          SUBMIT_OUTPUT=$(xcrun notarytool submit "$PKG_PATH" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait \
-            --timeout 600
+            --timeout 600 2>&1) || true
+
+          echo "$SUBMIT_OUTPUT"
+
+          # Extract submission ID and fetch detailed log on failure
+          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | grep "id:" | head -1 | awk '{print $2}')
+          STATUS=$(echo "$SUBMIT_OUTPUT" | grep "status:" | tail -1 | awk '{print $2}')
+
+          if [ "$STATUS" != "Accepted" ]; then
+            echo ""
+            echo "========================================="
+            echo " Notarization FAILED — fetching details"
+            echo "========================================="
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_APP_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" || true
+            exit 1
+          fi
 
           echo "Stapling notarization ticket..."
           xcrun stapler staple "$PKG_PATH"
@@ -195,6 +213,7 @@ jobs:
 
       # ─── Upload artifact ─────────────────────────────────────────
       - name: Upload PKG artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: AdminRightsManager-${{ steps.version.outputs.VERSION }}
