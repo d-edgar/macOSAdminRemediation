@@ -1,0 +1,218 @@
+name: Build & Sign PKG
+
+on:
+  push:
+    tags:
+      - 'v*'          # Triggered by version tags like v1.0.0
+  workflow_dispatch:    # Manual trigger from GitHub UI
+    inputs:
+      version:
+        description: 'Version number (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+env:
+  SCHEME_APP: AdminRightsManager
+  SCHEME_HELPER: com.adminrights.manager.helper
+  PKG_IDENTIFIER: com.adminrights.manager
+
+jobs:
+  build-and-sign:
+    runs-on: macos-14    # Apple Silicon runner with Xcode 15+
+    timeout-minutes: 30
+
+    steps:
+      # ─── Checkout ────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─── Determine version ───────────────────────────────────────
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            # Strip 'v' prefix from tag
+            TAG="${GITHUB_REF#refs/tags/v}"
+            echo "VERSION=${TAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ─── Select Xcode ───────────────────────────────────────────
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      # ─── Install signing certificate ─────────────────────────────
+      - name: Install Developer ID certificates
+        env:
+          DEVELOPER_ID_APP_CERT: ${{ secrets.DEVELOPER_ID_APP_CERTIFICATE_P12 }}
+          DEVELOPER_ID_INSTALLER_CERT: ${{ secrets.DEVELOPER_ID_INSTALLER_CERTIFICATE_P12 }}
+          CERT_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create a temporary keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import Developer ID Application certificate (signs the app & helper)
+          APP_CERT_PATH="$RUNNER_TEMP/dev_id_app.p12"
+          echo -n "$DEVELOPER_ID_APP_CERT" | base64 --decode -o "$APP_CERT_PATH"
+          security import "$APP_CERT_PATH" \
+            -P "$CERT_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Import Developer ID Installer certificate (signs the pkg)
+          INSTALLER_CERT_PATH="$RUNNER_TEMP/dev_id_installer.p12"
+          echo -n "$DEVELOPER_ID_INSTALLER_CERT" | base64 --decode -o "$INSTALLER_CERT_PATH"
+          security import "$INSTALLER_CERT_PATH" \
+            -P "$CERT_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Set keychain search list
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Verify certificates are installed
+          echo "Installed identities:"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+          security find-identity -v "$KEYCHAIN_PATH"
+
+      # ─── Build app target ────────────────────────────────────────
+      - name: Build AdminRightsManager app (Release)
+        run: |
+          xcodebuild -project AdminRightsManager.xcodeproj \
+            -scheme "$SCHEME_APP" \
+            -configuration Release \
+            -derivedDataPath ./build/DerivedData \
+            MARKETING_VERSION="${{ steps.version.outputs.VERSION }}" \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            CODE_SIGN_STYLE=Manual \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
+            clean build
+
+      # ─── Build helper target ─────────────────────────────────────
+      - name: Build privileged helper (Release)
+        run: |
+          xcodebuild -project AdminRightsManager.xcodeproj \
+            -scheme "$SCHEME_HELPER" \
+            -configuration Release \
+            -derivedDataPath ./build/DerivedData \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            CODE_SIGN_STYLE=Manual \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
+            clean build
+
+      # ─── Stage files for PKG ─────────────────────────────────────
+      - name: Stage PKG payload
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          DERIVED="./build/DerivedData/Build/Products/Release"
+          PKG_ROOT="./build/pkg-root"
+          PKG_SCRIPTS="./build/pkg-scripts"
+
+          mkdir -p "$PKG_ROOT/Library/Application Support/AdminRightsManager"
+          mkdir -p "$PKG_ROOT/Library/PrivilegedHelperTools"
+          mkdir -p "$PKG_ROOT/Library/LaunchDaemons"
+          mkdir -p "$PKG_ROOT/Library/LaunchAgents"
+          mkdir -p "$PKG_SCRIPTS"
+
+          # Copy built artifacts
+          cp -R "$DERIVED/AdminRightsManager.app" \
+            "$PKG_ROOT/Library/Application Support/AdminRightsManager/"
+          cp "$DERIVED/com.adminrights.manager.helper" \
+            "$PKG_ROOT/Library/PrivilegedHelperTools/"
+
+          # Copy plists
+          cp "./AdminRightsHelper/com.adminrights.manager.helper.plist" \
+            "$PKG_ROOT/Library/LaunchDaemons/"
+          cp "./LaunchAgent/com.adminrights.manager.plist" \
+            "$PKG_ROOT/Library/LaunchAgents/"
+
+          # Copy install scripts
+          cp "./Scripts/preinstall.sh" "$PKG_SCRIPTS/preinstall"
+          cp "./Scripts/postinstall.sh" "$PKG_SCRIPTS/postinstall"
+          chmod +x "$PKG_SCRIPTS/preinstall" "$PKG_SCRIPTS/postinstall"
+
+      # ─── Build & sign PKG ────────────────────────────────────────
+      - name: Build and sign PKG
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+
+          # Build component pkg
+          pkgbuild \
+            --root "./build/pkg-root" \
+            --identifier "$PKG_IDENTIFIER" \
+            --version "$VERSION" \
+            --scripts "./build/pkg-scripts" \
+            --ownership recommended \
+            "./build/AdminRightsManager-component.pkg"
+
+          # Build signed distribution pkg
+          productbuild \
+            --package "./build/AdminRightsManager-component.pkg" \
+            --identifier "$PKG_IDENTIFIER" \
+            --version "$VERSION" \
+            --sign "Developer ID Installer: ${{ secrets.DEVELOPER_ID_NAME }}" \
+            --timestamp \
+            "./build/AdminRightsManager-${VERSION}.pkg"
+
+          rm -f "./build/AdminRightsManager-component.pkg"
+          echo "PKG built: ./build/AdminRightsManager-${VERSION}.pkg"
+
+      # ─── Notarize ────────────────────────────────────────────────
+      - name: Notarize PKG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          PKG_PATH="./build/AdminRightsManager-${VERSION}.pkg"
+
+          echo "Submitting for notarization..."
+          xcrun notarytool submit "$PKG_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait \
+            --timeout 600
+
+          echo "Stapling notarization ticket..."
+          xcrun stapler staple "$PKG_PATH"
+
+          echo "Verifying notarization..."
+          spctl --assess --type install -v "$PKG_PATH"
+
+      # ─── Upload artifact ─────────────────────────────────────────
+      - name: Upload PKG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdminRightsManager-${{ steps.version.outputs.VERSION }}
+          path: ./build/AdminRightsManager-${{ steps.version.outputs.VERSION }}.pkg
+          retention-days: 90
+
+      # ─── Create GitHub Release (tag pushes only) ─────────────────
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./build/AdminRightsManager-${{ steps.version.outputs.VERSION }}.pkg
+          generate_release_notes: true
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ─── Cleanup keychain ────────────────────────────────────────
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
