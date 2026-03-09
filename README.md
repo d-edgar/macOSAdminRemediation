@@ -67,6 +67,11 @@ The output `.pkg` will be in `./build/`. Sign and notarize it before deploying.
 
 Upload `AdminRightsManager-x.x.x.pkg` to your MDM as a package. In Jamf Pro, this goes under Settings → Packages.
 
+The pkg handles everything automatically during installation — no manual steps are needed beyond uploading and scoping. The built-in install scripts perform the following:
+
+- **Preinstall**: Stops any existing LaunchDaemon, LaunchAgent, and running app instance (safe for upgrades)
+- **Postinstall**: Sets correct ownership and permissions (`root:wheel`) on all components, loads the LaunchDaemon (privileged helper) via `launchctl bootstrap`, loads the LaunchAgent for the current console user, and launches the app immediately for a first-run experience. If no user is logged in at install time, the LaunchAgent activates at next login.
+
 ### Step 2: Deploy the Configuration Profile
 
 The file `ConfigProfile/com.adminrights.manager.mobileconfig` is a template for customizing the tool's behavior. Before deploying:
