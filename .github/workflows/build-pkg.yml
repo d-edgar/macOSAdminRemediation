@@ -96,6 +96,8 @@ jobs:
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_ENTITLEMENTS="AdminRightsManager/AdminRightsManager.entitlements" \
+            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             clean build
 
@@ -109,6 +111,8 @@ jobs:
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_ENTITLEMENTS="AdminRightsHelper/AdminRightsHelper.entitlements" \
+            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             build
 
