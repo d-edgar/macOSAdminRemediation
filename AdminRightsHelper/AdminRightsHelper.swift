@@ -197,4 +197,9 @@ func watchForSignals() {
 
 // MARK: - Entry Point
 
-watchForSignals()
+@main
+enum HelperMain {
+    static func main() {
+        watchForSignals()
+    }
+}
