@@ -96,10 +96,32 @@ struct RemediatingView: View {
 // MARK: - Remediation Complete View
 
 struct RemediationCompleteView: View {
+    @State private var copied = false
+    @State private var countdown = 30
+    @State private var timer: Timer?
+
+    private let config = AppConfiguration.shared
+    private let receipt: RemediationReceipt
+
+    init() {
+        let gatherer = SystemInfoGatherer()
+        self.receipt = RemediationReceipt(
+            timestamp: Date(),
+            username: NSUserName(),
+            fullName: NSFullUserName(),
+            hostname: gatherer.hostname(),
+            serialNumber: gatherer.serialNumber(),
+            macOSVersion: "\(gatherer.macOSProductName()) \(gatherer.macOSVersion())",
+            hardwareModel: gatherer.hardwareModel(),
+            organization: AppConfiguration.shared.organizationName
+        )
+    }
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 20) {
+            // Success header
             Image(systemName: "checkmark.shield.fill")
-                .font(.system(size: 64))
+                .font(.system(size: 48))
                 .foregroundColor(.green)
 
             Text("Remediation Complete")
@@ -107,25 +129,209 @@ struct RemediationCompleteView: View {
                 .fontWeight(.bold)
                 .foregroundColor(.white)
 
-            Text("Your admin privileges have been removed.\nYour account is now a standard user and compliant with \(AppConfiguration.shared.organizationName) policy.")
+            Text("Your admin privileges have been removed. Your account is now a standard user and compliant with \(config.organizationName) policy.")
                 .font(.body)
                 .foregroundColor(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 450)
+                .frame(maxWidth: 500)
 
-            Text("If you need temporary admin access in the future,\nplease use Jamf Connect or contact IT support.")
+            // Receipt card
+            VStack(alignment: .leading, spacing: 0) {
+                // Receipt header
+                HStack {
+                    Image(systemName: "doc.text.fill")
+                        .foregroundColor(.brandPrimary)
+                    Text("Remediation Receipt")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Button {
+                        copyReceipt()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                            Text(copied ? "Copied" : "Copy")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.white.opacity(0.1))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.white.opacity(0.05))
+
+                Divider().background(Color.white.opacity(0.1))
+
+                // Receipt body
+                VStack(alignment: .leading, spacing: 8) {
+                    receiptRow(label: "Action", value: "Admin rights removed")
+                    receiptRow(label: "Status", value: "Completed successfully", valueColor: .green)
+                    Divider().background(Color.white.opacity(0.06)).padding(.vertical, 4)
+                    receiptRow(label: "Date & Time", value: receipt.formattedTimestamp)
+                    receiptRow(label: "Username", value: receipt.username)
+                    receiptRow(label: "Full Name", value: receipt.fullName)
+                    Divider().background(Color.white.opacity(0.06)).padding(.vertical, 4)
+                    receiptRow(label: "Computer", value: receipt.hostname)
+                    receiptRow(label: "Serial Number", value: receipt.serialNumber)
+                    receiptRow(label: "Model", value: receipt.hardwareModel)
+                    receiptRow(label: "macOS", value: receipt.macOSVersion)
+                    Divider().background(Color.white.opacity(0.06)).padding(.vertical, 4)
+                    receiptRow(label: "Organization", value: receipt.organization)
+                    receiptRow(label: "Reference ID", value: receipt.referenceID)
+                }
+                .padding(16)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.03))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            .frame(maxWidth: 500)
+
+            Text("Save or copy this receipt for your records. If you need temporary admin access in the future, contact \(config.supportContactName).")
                 .font(.callout)
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 450)
+                .frame(maxWidth: 500)
 
-            Button("Close") {
-                NSApplication.shared.terminate(nil)
+            // OK button with countdown
+            Button {
+                signalCleanupAndClose()
+            } label: {
+                Text(countdown > 0 ? "OK — closing in \(countdown)s" : "OK")
+                    .frame(minWidth: 200)
             }
             .buttonStyle(PrimaryButtonStyle())
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
-        .padding(40)
+        .padding(32)
+        .onAppear {
+            startCountdown()
+        }
+        .onDisappear {
+            timer?.invalidate()
+        }
+    }
+
+    // MARK: - Receipt Row
+
+    private func receiptRow(label: String, value: String, valueColor: Color = .white.opacity(0.85)) -> some View {
+        HStack(alignment: .top) {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.4))
+                .frame(width: 110, alignment: .trailing)
+            Text(value)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(valueColor)
+                .textSelection(.enabled)
+            Spacer()
+        }
+    }
+
+    // MARK: - Actions
+
+    private func copyReceipt() {
+        let text = receipt.formattedText
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        copied = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            copied = false
+        }
+    }
+
+    private func startCountdown() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if countdown > 0 {
+                countdown -= 1
+            } else {
+                timer?.invalidate()
+                signalCleanupAndClose()
+            }
+        }
+    }
+
+    private func signalCleanupAndClose() {
+        timer?.invalidate()
+
+        // Write cleanup signal for the privileged helper to uninstall
+        let cleanupSignalPath = "/Library/Application Support/AdminRightsManager/cleanup"
+        try? "cleanup".write(toFile: cleanupSignalPath, atomically: true, encoding: .utf8)
+
+        // Give the signal a moment to be written, then quit
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NSApplication.shared.terminate(nil)
+        }
+    }
+}
+
+// MARK: - Remediation Receipt Model
+
+struct RemediationReceipt {
+    let timestamp: Date
+    let username: String
+    let fullName: String
+    let hostname: String
+    let serialNumber: String
+    let macOSVersion: String
+    let hardwareModel: String
+    let organization: String
+
+    /// Unique reference ID for this remediation event
+    var referenceID: String {
+        let dateStr = ISO8601DateFormatter().string(from: timestamp)
+        let hash = abs("\(username)\(serialNumber)\(dateStr)".hashValue)
+        return "REM-\(String(hash).prefix(8))"
+    }
+
+    var formattedTimestamp: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .medium
+        return formatter.string(from: timestamp)
+    }
+
+    var formattedText: String {
+        """
+        ═══════════════════════════════════════════════
+          ADMIN RIGHTS REMEDIATION RECEIPT
+          \(organization)
+        ═══════════════════════════════════════════════
+
+          Action:         Admin rights removed
+          Status:         Completed successfully
+          Date & Time:    \(formattedTimestamp)
+
+          Username:       \(username)
+          Full Name:      \(fullName)
+
+          Computer:       \(hostname)
+          Serial Number:  \(serialNumber)
+          Model:          \(hardwareModel)
+          macOS:          \(macOSVersion)
+
+          Organization:   \(organization)
+          Reference ID:   \(referenceID)
+
+        ═══════════════════════════════════════════════
+          This receipt confirms that administrator
+          privileges were voluntarily removed from the
+          above account in compliance with organizational
+          security policy.
+        ═══════════════════════════════════════════════
+        """
     }
 }
 

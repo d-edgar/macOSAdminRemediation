@@ -17,8 +17,15 @@ import Foundation
 let signalDirectory = "/Library/Application Support/AdminRightsManager"
 let signalFilePath = "\(signalDirectory)/remediate"
 let resultFilePath = "\(signalDirectory)/result"
+let cleanupSignalPath = "\(signalDirectory)/cleanup"
 let auditLogPath = "/Library/Logs/AdminRightsManager.log"
 let pollInterval: TimeInterval = 2.0 // Check every 2 seconds
+
+// Installed file paths for cleanup
+let appPath = "/Library/Application Support/AdminRightsManager"
+let helperBinaryPath = "/Library/PrivilegedHelperTools/com.adminrights.manager.helper"
+let daemonPlistPath = "/Library/LaunchDaemons/com.adminrights.manager.helper.plist"
+let agentPlistPath = "/Library/LaunchAgents/com.adminrights.manager.plist"
 
 // MARK: - Logging
 
@@ -137,6 +144,76 @@ func runCommand(_ path: String, arguments: [String]) -> CommandResult {
     }
 }
 
+// MARK: - Self-Cleanup
+
+/// Removes all installed components after successful remediation.
+/// This runs as root so it can remove system-level files.
+/// The audit log is preserved for compliance records.
+func performCleanup() {
+    log("Cleanup signal received. Beginning self-uninstall...")
+
+    let fm = FileManager.default
+
+    // 1. Unload the LaunchAgent for the current console user
+    log("Unloading LaunchAgent...")
+    let consoleUserResult = runCommand("/usr/sbin/scutil", arguments: ["--get", "ConsoleUser"])
+    let consoleUser = consoleUserResult.output.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if !consoleUser.isEmpty && consoleUser != "loginwindow" {
+        let uidResult = runCommand("/usr/bin/id", arguments: ["-u", consoleUser])
+        let uid = uidResult.output.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !uid.isEmpty {
+            _ = runCommand("/bin/launchctl", arguments: ["bootout", "gui/\(uid)", agentPlistPath])
+            log("LaunchAgent unloaded for user \(consoleUser)")
+        }
+    }
+
+    // 2. Kill the app if still running
+    _ = runCommand("/usr/bin/killall", arguments: ["AdminRightsManager"])
+
+    // 3. Remove the LaunchAgent plist
+    log("Removing LaunchAgent plist...")
+    try? fm.removeItem(atPath: agentPlistPath)
+
+    // 4. Remove the app bundle
+    log("Removing app bundle...")
+    try? fm.removeItem(atPath: appPath)
+
+    // 5. Remove the cleanup signal file (already in appPath, but just in case)
+    try? fm.removeItem(atPath: cleanupSignalPath)
+
+    // 6. Log completion — audit log is deliberately preserved
+    log("Self-uninstall complete. Audit log preserved at \(auditLogPath)")
+    log("The LaunchDaemon and helper binary will be removed now.")
+
+    // 7. Unload ourselves (the LaunchDaemon) and remove remaining files
+    //    We write a small cleanup script that runs after we exit,
+    //    since we can't delete ourselves while running.
+    let cleanupScript = """
+    #!/bin/bash
+    sleep 2
+    /bin/launchctl bootout system "\(daemonPlistPath)" 2>/dev/null
+    rm -f "\(helperBinaryPath)"
+    rm -f "\(daemonPlistPath)"
+    rm -f /tmp/adminrights_final_cleanup.sh
+    """
+
+    let scriptPath = "/tmp/adminrights_final_cleanup.sh"
+    try? cleanupScript.write(toFile: scriptPath, atomically: true, encoding: .utf8)
+    try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptPath)
+
+    // Launch the cleanup script in the background and exit
+    let task = Process()
+    task.executableURL = URL(fileURLWithPath: "/bin/bash")
+    task.arguments = [scriptPath]
+    task.standardOutput = FileHandle.nullDevice
+    task.standardError = FileHandle.nullDevice
+    try? task.run()
+
+    // Exit the helper — the script will clean up after us
+    exit(0)
+}
+
 // MARK: - Signal Watcher
 
 func ensureDirectoryExists() {
@@ -155,8 +232,15 @@ func watchForSignals() {
     log("AdminRightsManager Helper started. Watching for remediation signals...")
     ensureDirectoryExists()
 
-    // Main run loop - watch for the signal file
+    // Main run loop - watch for signal files
     while true {
+        // Check for cleanup signal (post-remediation self-uninstall)
+        if FileManager.default.fileExists(atPath: cleanupSignalPath) {
+            performCleanup()
+            // performCleanup calls exit(0), so we never reach here
+        }
+
+        // Check for remediation signal
         if FileManager.default.fileExists(atPath: signalFilePath) {
             log("Remediation signal detected!")
 

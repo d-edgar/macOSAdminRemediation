@@ -4,13 +4,39 @@ A macOS tool for managing and remediating unauthorized admin privileges. Deploye
 
 Fully white-label — customize branding, colors, logos, messaging, and support URLs via MDM configuration profiles.
 
+## Screenshots
+
+### Compliance Nag Screen
+The main window shown to users with admin rights. Displays your organization's policy message and presents two options: self-remediate or submit a request for continued access.
+
+![Nag Screen](Screenshots/01-nag-screen.png)
+
+### Remediation Confirmation
+When a user clicks "Remediate," a system confirmation dialog ensures they understand the action is immediate and irreversible.
+
+![Confirm Dialog](Screenshots/02-confirm-dialog.png)
+
+### Diagnostic Report
+If the user clicks "Submit Request," a full system diagnostic report is generated with device info, admin user details, and Jamf Connect status. The user can copy the report and open the help desk portal.
+
+![Diagnostic Report](Screenshots/03-diagnostic-report.png)
+
 ## How It Works
 
 Admin Rights Manager has three components that work together:
 
 - **LaunchAgent** — Runs in the logged-in user's session. Launches the app at login and on a recurring interval (default: every 4 hours). Installed to `/Library/LaunchAgents/`.
 - **App** (`AdminRightsManager.app`) — A SwiftUI window that checks whether the current user has admin rights. If they do, it displays a branded compliance nag with options to self-remediate or submit a request for continued access. If the user is not an admin, the app quits immediately. Installed to `/Library/Application Support/AdminRightsManager/`. Hidden from the Dock via `LSUIElement`.
-- **Privileged Helper** — A LaunchDaemon running as root that performs the actual admin rights removal using `dseditgroup`. The app communicates with it via a file-based signal in `/Library/Application Support/AdminRightsManager/`. Installed to `/Library/PrivilegedHelperTools/`.
+- **Privileged Helper** — A LaunchDaemon running as root that performs the actual admin rights removal using `dseditgroup`. The app communicates with it via a file-based signal in `/Library/Application Support/AdminRightsManager/`. Installed to `/Library/PrivilegedHelperTools/`. After successful remediation, the helper also performs a full self-uninstall of all components (audit log preserved).
+
+### User Flow
+
+1. The LaunchAgent opens the app on a recurring schedule
+2. The app checks if the current user has admin rights — if not, it quits silently
+3. If they do, the **compliance nag screen** is displayed (screenshot above)
+4. The user chooses to **remediate** or **submit a request**:
+   - **Remediate**: A confirmation dialog appears. On confirm, the privileged helper removes admin rights via `dseditgroup`. A remediation receipt is shown with the user's details, device serial, timestamp, and a reference ID. The user can copy this receipt for their records. After clicking "OK" (or a 30-second auto-close), the tool uninstalls itself from the machine.
+   - **Submit Request**: A diagnostic report is generated (screenshot above) with device info, admin user list, and Jamf Connect status. The user copies the report and opens the help desk portal to request continued access.
 
 ## Requirements
 
@@ -98,15 +124,11 @@ All keys are optional — the app uses sensible defaults for anything not specif
 
 Create a smart group in your MDM that targets machines where the logged-in user has admin rights. Scope both the PKG policy and the configuration profile to this group.
 
-### Step 4: Uninstall Policy (Optional)
+### Step 4: Automatic Cleanup
 
-For users who have been remediated (no longer admins), create a separate policy scoped to a "remediated" smart group that runs the uninstall script:
+After a user successfully remediates, the tool automatically cleans itself up. When the user clicks "OK" on the remediation receipt screen, the app signals the privileged helper to perform a full self-uninstall: it unloads the LaunchAgent, removes the app bundle and support files, then unloads itself and removes the LaunchDaemon and helper binary. The audit log at `/Library/Logs/AdminRightsManager.log` is deliberately preserved for compliance records.
 
-```bash
-./Scripts/uninstall.sh
-```
-
-This removes the app, helper, LaunchDaemon, LaunchAgent, and all supporting files.
+No separate uninstall policy is needed for remediated users. However, `Scripts/uninstall.sh` is still available if you need to force-remove the tool from machines via MDM independently of the remediation flow.
 
 ## File Locations
 
