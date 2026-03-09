@@ -95,6 +95,7 @@ jobs:
             MARKETING_VERSION="${{ steps.version.outputs.VERSION }}" \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             clean build
 
@@ -107,6 +108,7 @@ jobs:
             -derivedDataPath ./build/DerivedData \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
             clean build
 
