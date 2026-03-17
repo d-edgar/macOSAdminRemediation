@@ -7,19 +7,14 @@ Fully white-label — customize branding, colors, logos, messaging, and support 
 ## Screenshots
 
 ### Compliance Nag Screen
-The main window shown to users with admin rights. Displays your organization's policy message and presents two options: self-remediate or submit a request for continued access.
+The main window shown to users with admin rights. Displays your organization's policy message and presents three options: self-remediate, submit a request for continued access, or defer with an existing ticket. The "I've Already Submitted a Ticket" button tracks remaining uses (configurable via `MaxTicketDeferrals`). The window follows macOS system appearance for light and dark mode.
 
 ![Nag Screen](Screenshots/01-nag-screen.png)
 
-### Remediation Confirmation
-When a user clicks "Remediate," a system confirmation dialog ensures they understand the action is immediate and irreversible.
-
-![Confirm Dialog](Screenshots/02-confirm-dialog.png)
-
 ### Diagnostic Report
-If the user clicks "Submit Request," a full system diagnostic report is generated with device info, admin user details, and Jamf Connect status. The user can copy the report and open the help desk portal.
+If the user clicks "Submit Request," a full system diagnostic report is generated with device info, admin user details, and Jamf Connect status. The user copies the report to clipboard, then opens the help desk portal to paste it into their request.
 
-![Diagnostic Report](Screenshots/03-diagnostic-report.png)
+![Diagnostic Report](Screenshots/02-diagnostic-report.png)
 
 ## How It Works
 
@@ -33,10 +28,11 @@ Admin Rights Manager has three components that work together:
 
 1. The LaunchAgent opens the app on a recurring schedule
 2. The app checks if the current user has admin rights — if not, it quits silently
-3. If they do, the **compliance nag screen** is displayed (screenshot above)
-4. The user chooses to **remediate** or **submit a request**:
+3. If they do, the **compliance nag screen** is displayed (screenshot above). When `AllowDeferral` is false (the default), the window is persistent — it floats above all other windows and cannot be closed, minimized, hidden, or quit via keyboard shortcuts
+4. The user chooses one of three options:
    - **Remediate**: A confirmation dialog appears. On confirm, the privileged helper removes admin rights via `dseditgroup`. A remediation receipt is shown with the user's details, device serial, timestamp, and a reference ID. The user can copy this receipt for their records. After clicking "OK" (or a 30-second auto-close), the tool uninstalls itself from the machine.
    - **Submit Request**: A diagnostic report is generated (screenshot above) with device info, admin user list, and Jamf Connect status. The user copies the report and opens the help desk portal to request continued access.
+   - **I've Already Submitted a Ticket**: Dismisses the window until the next LaunchAgent cycle. This option has a limited number of uses (default: 10, configurable via `MaxTicketDeferrals`). The remaining count is shown on the button and persists across launches. Once exhausted, the button disappears.
 
 ## Requirements
 
@@ -115,6 +111,7 @@ The file `ConfigProfile/com.adminrights.manager.mobileconfig` is a template for 
 - Policy message text and policy document URL
 - Nag behavior: deferral allowed, grace period in days, nag interval
 - Show/hide the "Submit Request" button
+- Ticket deferral limit (max number of "I've Already Submitted a Ticket" dismissals)
 - Jamf Connect integration paths
 - Audit logging toggle and log path
 
