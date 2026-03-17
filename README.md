@@ -96,26 +96,43 @@ The pkg handles everything automatically during installation — no manual steps
 
 ### Step 2: Deploy the Configuration Profile
 
-The file `ConfigProfile/com.adminrights.manager.mobileconfig` is a template for customizing the tool's behavior. Before deploying:
+The `ConfigProfile/` directory contains two files for configuring the tool:
 
-1. Update all values marked `CHANGE THIS` — at minimum: `OrganizationName`, `SupportContactName`, `SupportEmail`, and `PolicyMessage`
-2. Generate new `PayloadUUID` values using `uuidgen` in Terminal
-3. Upload to your MDM as a Custom Settings / Configuration Profile targeting the `com.adminrights.manager` preference domain
-4. Scope it to the same group as the PKG
+- **`com.adminrights.manager.mobileconfig`** — A ready-to-edit XML configuration profile template. Update the values for your organization, generate new `PayloadUUID` values using `uuidgen` in Terminal, then upload to your MDM targeting the `com.adminrights.manager` preference domain.
+- **`com.adminrights.manager.json`** — A Jamf Pro JSON Schema file. In Jamf Pro, go to Configuration Profiles → Application & Custom Settings → External Applications → Add → Custom Schema. Enter `com.adminrights.manager` as the preference domain, click Add Schema, and paste the contents of this JSON file. Jamf Pro will render a GUI form for all configurable keys — no manual XML editing needed.
 
-**Configurable settings include:**
+![Jamf Pro JSON Schema Form](Screenshots/04-jamf-pro-schema.png)
 
-- Organization name, department name, and accent color (single hex value — all UI colors derived automatically for light and dark mode)
-- Custom logo image path
-- Support contact info (phone, email, website, request portal URL)
-- Policy message text and policy document URL
-- Nag behavior: deferral allowed, grace period in days, nag interval
-- Show/hide the "Submit Request" button
-- Ticket deferral limit (max number of "I've Already Submitted a Ticket" dismissals)
-- Jamf Connect integration paths
-- Audit logging toggle and log path
+At minimum, update: `OrganizationName`, `SupportContactName`, `SupportEmail`, and `PolicyMessage`. Scope the profile to the same group as the PKG.
 
 All keys are optional — the app uses sensible defaults for anything not specified in the profile.
+
+#### Preference Domain Reference
+
+The preference domain is `com.adminrights.manager`. The following keys are available:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `OrganizationName` | String | `Your Organization` | Organization name displayed in the header bar |
+| `DepartmentName` | String | `IT Services` | Department name shown after org name in the header |
+| `SupportContactName` | String | `IT Help Desk` | Display name for your support team |
+| `SupportPhone` | String | `(555) 123-4567` | Clickable phone number in the footer (empty to hide) |
+| `SupportEmail` | String | `helpdesk@example.edu` | Clickable email link in the footer (empty to hide) |
+| `SupportWebsiteURL` | String | `https://it.example.edu` | IT website link in the footer (empty to hide) |
+| `SupportRequestURL` | String | `https://helpdesk.example.edu/request` | Help desk portal URL for the "Open Help Desk Portal" button |
+| `PolicyURL` | String | `https://it.example.edu/policies/admin-rights` | Link to the full policy document shown in the header |
+| `PolicyMessage` | String | *(default text)* | Warning text shown to users explaining why they need to remediate |
+| `AccentColorHex` | String | `#1b386d` | Brand accent color as a hex value — buttons, links, and highlights. All other UI colors are derived automatically for light and dark mode |
+| `LogoImagePath` | String | *(empty)* | Absolute path to a custom logo PNG on disk (empty = default shield icon) |
+| `NagIntervalSeconds` | Integer | `14400` | Display interval in seconds (the actual interval is controlled by the LaunchAgent plist) |
+| `AllowDeferral` | Boolean | `false` | Allow users to close the window without acting. When false, the window is persistent and unclosable |
+| `GracePeriodDays` | Integer | `0` | Days before forced remediation (0 = nag-only, never force) |
+| `ShowSubmitRequestOption` | Boolean | `true` | Show the "Submit Request — I Need Admin Access" button |
+| `MaxTicketDeferrals` | Integer | `10` | Max uses of "I've Already Submitted a Ticket" before the button disappears (0 = hide entirely) |
+| `JamfConnectAppPath` | String | `/Applications/Jamf Connect.app` | Path to detect Jamf Connect for the diagnostic report |
+| `JamfConnectElevationURL` | String | *(empty)* | Jamf Connect elevation workflow URL (empty if not using) |
+| `EnableLocalAuditLog` | Boolean | `true` | Write a local audit log of remediation actions |
+| `AuditLogPath` | String | `/Library/Logs/AdminRightsManager.log` | File path for the local audit log |
 
 ### Step 3: Create a Smart Group
 
@@ -137,12 +154,6 @@ No separate uninstall policy is needed for remediated users. However, `Scripts/u
 | LaunchAgent plist | `/Library/LaunchAgents/com.adminrights.manager.plist` |
 | Audit log | `/Library/Logs/AdminRightsManager.log` |
 | Helper stdout log | `/Library/Logs/AdminRightsManager-helper.log` |
-
-## Preference Domain
-
-`com.adminrights.manager`
-
-The app reads its configuration from managed preferences via `UserDefaults`. Any key set through an MDM configuration profile targeting this domain will override the built-in defaults. See the `.mobileconfig` template for the full list of available keys.
 
 ## License
 
