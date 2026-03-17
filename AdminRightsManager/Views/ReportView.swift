@@ -35,29 +35,29 @@ struct ReportView: View {
     private var instructions: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "info.circle.fill")
-                .foregroundColor(.brandPrimary)
+                .foregroundColor(.accent)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("How to submit your request")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
 
                 if !config.supportRequestURL.isEmpty, let url = URL(string: config.supportRequestURL) {
                     Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window. Submit your request at:")
                         .font(.callout)
-                        .foregroundColor(.white.opacity(0.85))
+                        .foregroundColor(.textSecondary)
                         .lineSpacing(2)
 
                     Link(config.supportRequestURL, destination: url)
                         .font(.callout)
                         .fontWeight(.medium)
-                        .foregroundColor(.white)
+                        .foregroundColor(.accent)
                 } else {
                     Text("Copy the report below and paste it into your admin rights request. You can also take a screenshot of this window.")
                         .font(.callout)
-                        .foregroundColor(.white.opacity(0.85))
+                        .foregroundColor(.textSecondary)
                         .lineSpacing(2)
                 }
             }
@@ -65,10 +65,10 @@ struct ReportView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.white.opacity(0.12))
+                .fill(Color.infoBoxBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.infoBoxBorder, lineWidth: 1)
                 )
         )
     }
@@ -84,17 +84,17 @@ struct ReportView: View {
                 Text("System Diagnostic Report")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .foregroundColor(.textPrimary)
                 Spacer()
                 Text(report.generatedAt, style: .date)
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(.textTertiary)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Color.white.opacity(0.05))
+            .background(Color.cardBackground.opacity(0.6))
 
-            Divider().background(Color.white.opacity(0.1))
+            Divider().background(Color.divider)
 
             // Device Info Section
             reportSection("Device Information") {
@@ -105,7 +105,7 @@ struct ReportView: View {
                 reportRow("Jamf Pro", report.jamfProEnrolled ? "Enrolled" : "Not Detected")
             }
 
-            Divider().background(Color.white.opacity(0.1))
+            Divider().background(Color.divider)
 
             // Jamf Connect Section
             reportSection("Jamf Connect") {
@@ -120,13 +120,13 @@ struct ReportView: View {
                             .font(.caption)
                         Text("Jamf Connect is not installed — temporary elevation may not be available")
                             .font(.caption)
-                            .foregroundColor(.orange.opacity(0.8))
+                            .foregroundColor(.orange)
                     }
                     .padding(.top, 4)
                 }
             }
 
-            Divider().background(Color.white.opacity(0.1))
+            Divider().background(Color.divider)
 
             // Admin Users Section
             reportSection("Admin Users on This Device") {
@@ -136,7 +136,7 @@ struct ReportView: View {
                             Text(user.username)
                                 .font(.body)
                                 .fontWeight(.medium)
-                                .foregroundColor(.white)
+                                .foregroundColor(.textPrimary)
 
                             if user.isCurrentUser {
                                 Text("(you)")
@@ -154,17 +154,17 @@ struct ReportView: View {
                         HStack(spacing: 16) {
                             Label(user.fullName, systemImage: "person.fill")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.6))
+                                .foregroundColor(.textSecondary)
 
                             Label(user.accountType.rawValue, systemImage: user.accountType == .mobile ? "network" : "desktopcomputer")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(user.accountType == .mobile ? .orange : .white.opacity(0.6))
+                                .foregroundColor(user.accountType == .mobile ? .orange : .textSecondary)
 
                             if let uid = user.uid {
                                 Label("UID \(uid)", systemImage: "number")
                                     .font(.caption)
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .foregroundColor(.textSecondary)
                             }
                         }
                     }
@@ -177,7 +177,7 @@ struct ReportView: View {
                 .fill(Color.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .stroke(Color.cardBorder, lineWidth: 1)
                 )
         )
     }
@@ -187,7 +187,7 @@ struct ReportView: View {
             Text(title.uppercased())
                 .font(.caption)
                 .fontWeight(.bold)
-                .foregroundColor(.white.opacity(0.4))
+                .foregroundColor(.textTertiary)
                 .tracking(1)
 
             content()
@@ -199,13 +199,13 @@ struct ReportView: View {
         HStack {
             Text(label)
                 .font(.callout)
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.textSecondary)
                 .frame(width: 120, alignment: .leading)
 
             Text(value)
                 .font(.callout)
                 .fontWeight(.medium)
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
 
             Spacer()
         }
@@ -259,7 +259,7 @@ struct ReportView: View {
             if !hasCopied && !config.supportRequestURL.isEmpty {
                 Text("Copy the report first, then open the portal to paste it into your request.")
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.4))
+                    .foregroundColor(.textTertiary)
                     .italic()
             }
         }
@@ -270,7 +270,7 @@ struct ReportView: View {
     private var backButton: some View {
         VStack(spacing: 12) {
             Divider()
-                .background(Color.white.opacity(0.1))
+                .background(Color.divider)
 
             Button {
                 appState.currentView = .nag
@@ -280,7 +280,7 @@ struct ReportView: View {
                     Text("Go Back")
                 }
                 .font(.callout)
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.textSecondary)
             }
             .buttonStyle(.plain)
             .padding(.bottom, 8)

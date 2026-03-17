@@ -109,7 +109,7 @@ The file `ConfigProfile/com.adminrights.manager.mobileconfig` is a template for 
 
 **Configurable settings include:**
 
-- Organization name, department name, and brand colors (primary, secondary, dark — as hex values)
+- Organization name, department name, and accent color (single hex value — all UI colors derived automatically for light and dark mode)
 - Custom logo image path
 - Support contact info (phone, email, website, request portal URL)
 - Policy message text and policy document URL

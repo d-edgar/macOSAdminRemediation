@@ -77,9 +77,7 @@ All keys are optional. Deploy via MDM Custom Settings targeting domain `com.admi
 |-----|------|---------|-------------|
 | OrganizationName | String | Your Organization | Org name in UI |
 | DepartmentName | String | IT Services | Department shown in header |
-| PrimaryColorHex | String | #1b386d | Primary brand color |
-| SecondaryColorHex | String | #84888b | Secondary brand color |
-| DarkColorHex | String | #172951 | Dark background color |
+| AccentColorHex | String | #1b386d | Brand accent color (buttons, links, highlights) |
 | LogoImagePath | String | (empty) | Path to custom logo PNG |
 | SupportRequestURL | String | (HelpSpot URL) | Ticket portal URL |
 | SupportEmail | String | helpdesk@example.edu | Support contact email |

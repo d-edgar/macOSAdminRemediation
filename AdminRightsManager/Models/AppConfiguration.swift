@@ -45,17 +45,17 @@ struct AppConfiguration {
 
     /// Support email for questions
     var supportEmail: String {
-        defaults.string(forKey: "SupportEmail") ?? "helpdesk@example.com"
+        defaults.string(forKey: "SupportEmail") ?? "helpdesk@example.edu"
     }
 
     /// General IT website/portal URL (e.g., "https://it.example.edu")
     var supportWebsiteURL: String {
-        defaults.string(forKey: "SupportWebsiteURL") ?? "https://www.google.com"
+        defaults.string(forKey: "SupportWebsiteURL") ?? "https://it.example.edu"
     }
 
     /// URL for submitting admin rights elevation requests (e.g., help desk ticket portal)
     var supportRequestURL: String {
-        defaults.string(forKey: "SupportRequestURL") ?? "https://www.google.com"
+        defaults.string(forKey: "SupportRequestURL") ?? "https://helpdesk.example.edu/request"
     }
 
     /// Returns true if at least one support contact method is configured
@@ -65,7 +65,7 @@ struct AppConfiguration {
 
     /// URL to the full admin rights policy document (shown as link in header)
     var policyURL: String {
-        defaults.string(forKey: "PolicyURL") ?? "https://www.google.com"
+        defaults.string(forKey: "PolicyURL") ?? "https://it.example.edu/policies/admin-rights"
     }
 
     /// Custom policy message shown in the nag window
@@ -127,22 +127,14 @@ struct AppConfiguration {
         defaults.string(forKey: "DepartmentName") ?? "IT Services"
     }
 
-    /// Primary brand color hex (e.g., "#1b386d")
-    /// Used for buttons, accents, info boxes
-    var primaryColorHex: String {
-        defaults.string(forKey: "PrimaryColorHex") ?? "#1b386d"
-    }
-
-    /// Secondary/silver brand color hex (e.g., "#84888b")
-    /// Used for secondary buttons and muted UI elements
-    var secondaryColorHex: String {
-        defaults.string(forKey: "SecondaryColorHex") ?? "#84888b"
-    }
-
-    /// Dark brand color hex (e.g., "#172951")
-    /// Used for backgrounds and deep UI surfaces
-    var darkColorHex: String {
-        defaults.string(forKey: "DarkColorHex") ?? "#172951"
+    /// Accent/brand color hex (e.g., "#1b386d")
+    /// Used for buttons, links, and accent elements. All other UI colors
+    /// are derived automatically for light and dark mode.
+    /// Falls back to legacy "PrimaryColorHex" key for backward compatibility.
+    var accentColorHex: String {
+        defaults.string(forKey: "AccentColorHex")
+            ?? defaults.string(forKey: "PrimaryColorHex")
+            ?? "#1b386d"
     }
 
     /// Path to a custom logo image file on disk (PNG recommended)

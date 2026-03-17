@@ -69,12 +69,12 @@ struct NagView: View {
             } else {
                 Image(systemName: "shield.lefthalf.filled.badge.checkmark")
                     .font(.title2)
-                    .foregroundColor(.white)
+                    .foregroundColor(.headerText)
             }
 
             Text(headerTitle)
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(.headerText)
 
             Spacer()
 
@@ -86,12 +86,12 @@ struct NagView: View {
                         Image(systemName: "arrow.up.right.square")
                             .font(.caption)
                     }
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.headerText.opacity(0.7))
                 }
             } else {
                 Text("Admin Rights Policy")
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.headerText.opacity(0.7))
             }
         }
         .padding(.horizontal, 24)
@@ -122,11 +122,11 @@ struct NagView: View {
             Text("Action Required")
                 .font(.title)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
 
             Text("Your account has admin privileges that are not in compliance")
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(.textSecondary)
         }
     }
 
@@ -136,34 +136,34 @@ struct NagView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(config.policyMessage)
                 .font(.body)
-                .foregroundColor(.white.opacity(0.85))
+                .foregroundColor(.textPrimary.opacity(0.85))
                 .lineSpacing(4)
 
             // Info box
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "info.circle.fill")
-                    .foregroundColor(.brandPrimary)
+                    .foregroundColor(.accent)
                     .font(.title3)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("What happens next?")
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
 
                     Text("This reminder will appear \(config.nagIntervalDescription) until resolved. You can either remove your admin rights now, or submit a request if you need to retain them for a valid business reason.")
                         .font(.callout)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.textSecondary)
                         .lineSpacing(2)
                 }
             }
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.brandPrimary.opacity(0.1))
+                    .fill(Color.infoBoxBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.brandPrimary.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.infoBoxBorder, lineWidth: 1)
                     )
             )
         }
@@ -200,7 +200,7 @@ struct NagView: View {
                         if appState.isLoading {
                             ProgressView()
                                 .scaleEffect(0.7)
-                                .tint(.white)
+                                .tint(.accent)
                         } else {
                             Image(systemName: "arrow.right.circle")
                         }
@@ -218,13 +218,13 @@ struct NagView: View {
     private var supportInfo: some View {
         VStack(spacing: 8) {
             Divider()
-                .background(Color.white.opacity(0.1))
+                .background(Color.divider)
                 .padding(.bottom, 4)
 
             Text("Need help? Contact \(config.supportContactName)")
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(.textTertiary)
 
             // Contact methods — only show configured ones
             HStack(spacing: 16) {
@@ -232,7 +232,7 @@ struct NagView: View {
                     Link(destination: URL(string: "tel:\(config.supportPhone)")!) {
                         Label(config.supportPhone, systemImage: "phone.fill")
                             .font(.caption)
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(.textTertiary)
                     }
                 }
 
@@ -240,7 +240,7 @@ struct NagView: View {
                     Link(destination: URL(string: "mailto:\(config.supportEmail)")!) {
                         Label(config.supportEmail, systemImage: "envelope.fill")
                             .font(.caption)
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(.textTertiary)
                     }
                 }
 
@@ -249,7 +249,7 @@ struct NagView: View {
                         Link(destination: url) {
                             Label("Website", systemImage: "globe")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.4))
+                                .foregroundColor(.textTertiary)
                         }
                     }
                 }
@@ -257,7 +257,7 @@ struct NagView: View {
 
             Text("This tool is managed by \(headerTitle)")
                 .font(.caption2)
-                .foregroundColor(.white.opacity(0.3))
+                .foregroundColor(.textTertiary.opacity(0.7))
         }
     }
 

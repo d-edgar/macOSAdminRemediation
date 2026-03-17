@@ -1,0 +1,141 @@
+{
+    "title": "Admin Rights Manager (com.adminrights.manager)",
+    "description": "Configures the Admin Rights Management tool — behavior, branding, and remediation options.",
+    "__version": "1.0",
+    "__preferencedomain": "com.adminrights.manager",
+    "type": "object",
+    "options": {
+        "remove_empty_properties": true
+    },
+    "properties": {
+        "OrganizationName": {
+            "title": "Organization Name",
+            "description": "Your organization's short name displayed in the app header bar.",
+            "type": "string",
+            "default": "Your Organization"
+        },
+        "DepartmentName": {
+            "title": "Department Name",
+            "description": "Department name shown after the organization name in the header (e.g., IT Services, IT Security). If identical to OrganizationName, only one is shown.",
+            "type": "string",
+            "default": "IT Services"
+        },
+        "SupportContactName": {
+            "title": "Support Contact Name",
+            "description": "Display name for your support team, shown in the footer and on error screens.",
+            "type": "string",
+            "default": "IT Help Desk"
+        },
+        "SupportPhone": {
+            "title": "Support Phone",
+            "description": "Phone number shown as a clickable link in the footer. Leave empty to hide.",
+            "type": "string",
+            "default": "(555) 123-4567"
+        },
+        "SupportEmail": {
+            "title": "Support Email",
+            "description": "Email address shown as a clickable mailto link in the footer. Leave empty to hide.",
+            "type": "string",
+            "default": "helpdesk@example.edu"
+        },
+        "SupportWebsiteURL": {
+            "title": "Support Website URL",
+            "description": "IT department website URL shown as a clickable link in the footer. Leave empty to hide.",
+            "type": "string",
+            "default": "https://it.example.edu"
+        },
+        "SupportRequestURL": {
+            "title": "Support Request URL",
+            "description": "URL for submitting admin rights elevation requests. Powers the 'Open Help Desk Portal' button. Leave empty to hide.",
+            "type": "string",
+            "default": "https://helpdesk.example.edu/request"
+        },
+        "PolicyURL": {
+            "title": "Policy URL",
+            "description": "URL to your admin rights policy document. Shown as a clickable link in the header. Leave empty to show plain text.",
+            "type": "string",
+            "default": "https://it.example.edu/policies/admin-rights"
+        },
+        "PolicyMessage": {
+            "title": "Policy Message",
+            "description": "The warning text shown to users explaining why they need to remediate. Write this in your organization's voice.",
+            "type": "string",
+            "default": "Your account currently has administrator privileges on this Mac. Per organizational policy, standard user accounts should not retain persistent admin rights. This poses a security risk to your device and the network. Please remediate below or submit a request if you require elevated access for your role."
+        },
+        "AccentColorHex": {
+            "title": "Accent Color (Hex)",
+            "description": "Your primary brand color as a hex value (e.g., #1b386d). Used for buttons, links, and accent elements. The app automatically adapts all other colors for light and dark mode based on this value.",
+            "type": "string",
+            "default": "#1b386d",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "LogoImagePath": {
+            "title": "Logo Image Path",
+            "description": "Absolute path to a custom logo image file on disk (PNG with transparent background recommended). The installer PKG should place this file alongside the app. Leave empty to use the default shield icon.",
+            "type": "string",
+            "default": ""
+        },
+        "NagIntervalSeconds": {
+            "title": "Nag Interval (Seconds)",
+            "description": "How often the nag window appears, in seconds. This value is for display purposes — the actual interval is controlled by the LaunchAgent plist.",
+            "type": "integer",
+            "default": 14400,
+            "enum": [1800, 3600, 7200, 14400, 28800, 43200, 86400],
+            "options": {
+                "enum_titles": [
+                    "30 minutes",
+                    "1 hour",
+                    "2 hours",
+                    "4 hours (default)",
+                    "8 hours",
+                    "12 hours",
+                    "24 hours"
+                ]
+            }
+        },
+        "AllowDeferral": {
+            "title": "Allow Deferral",
+            "description": "Allow users to close the window without choosing an action. If false, the window stays floating until they click Remediate or Submit Request.",
+            "type": "boolean",
+            "default": false
+        },
+        "GracePeriodDays": {
+            "title": "Grace Period (Days)",
+            "description": "Number of days before forced remediation. Set to 0 for nag-only mode (never force).",
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 365
+        },
+        "ShowSubmitRequestOption": {
+            "title": "Show Submit Request Option",
+            "description": "Show the 'Submit Request — I Need Admin Access' button. Set to false to only allow remediation with no request option.",
+            "type": "boolean",
+            "default": true
+        },
+        "JamfConnectAppPath": {
+            "title": "Jamf Connect App Path",
+            "description": "Path to the Jamf Connect application for detection in the diagnostic report.",
+            "type": "string",
+            "default": "/Applications/Jamf Connect.app"
+        },
+        "JamfConnectElevationURL": {
+            "title": "Jamf Connect Elevation URL",
+            "description": "Jamf Connect elevation workflow URL. Leave empty if not using Jamf Connect elevation.",
+            "type": "string",
+            "default": ""
+        },
+        "EnableLocalAuditLog": {
+            "title": "Enable Local Audit Log",
+            "description": "Write a local log file of all remediation actions for compliance and audit purposes.",
+            "type": "boolean",
+            "default": true
+        },
+        "AuditLogPath": {
+            "title": "Audit Log Path",
+            "description": "File path for the local audit log.",
+            "type": "string",
+            "default": "/Library/Logs/AdminRightsManager.log"
+        }
+    }
+}

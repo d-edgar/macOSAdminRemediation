@@ -2,9 +2,9 @@
 //  BrandColors.swift
 //  AdminRightsManager
 //
-//  Brand colors — reads hex values from the managed preferences
-//  (config profile) so any organization can set their own palette.
-//  Falls back to defaults if no config profile is deployed.
+//  Adaptive brand colors — reads a single accent hex from managed
+//  preferences and derives all UI colors automatically for both
+//  light and dark appearances (follows macOS system setting).
 //
 
 import SwiftUI
@@ -28,9 +28,22 @@ extension Color {
         self.init(red: r, green: g, blue: b)
     }
 
-    /// Darkens a color by a percentage (0.0 = unchanged, 1.0 = black)
+    // MARK: - HSB Helpers
+
+    /// Lightens a color by increasing brightness
+    func lightened(by amount: Double) -> Color {
+        let nsColor = NSColor(self).usingColorSpace(.deviceRGB) ?? NSColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        nsColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return Color(hue: Double(h),
+                     saturation: Double(s) * (1.0 - amount * 0.5),
+                     brightness: min(Double(b) + amount * (1.0 - Double(b)), 1.0),
+                     opacity: Double(a))
+    }
+
+    /// Darkens a color by reducing brightness
     func darkened(by amount: Double) -> Color {
-        let nsColor = NSColor(self)
+        let nsColor = NSColor(self).usingColorSpace(.deviceRGB) ?? NSColor(self)
         var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         nsColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
         return Color(hue: Double(h),
@@ -39,45 +52,161 @@ extension Color {
                      opacity: Double(a))
     }
 
-    // MARK: - Configurable Brand Colors
+    // MARK: - Adaptive Color Factory
 
-    /// Primary brand color — read from config profile key "PrimaryColorHex"
-    /// Default: #1b386d
-    static var brandPrimary: Color {
-        Color(hex: AppConfiguration.shared.primaryColorHex)
+    /// Creates a color that adapts to the current macOS appearance.
+    /// Provide separate values for light and dark modes.
+    private static func adaptive(light: Color, dark: Color) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+                return NSColor(dark)
+            } else {
+                return NSColor(light)
+            }
+        })
     }
 
-    /// Secondary brand color — read from config profile key "SecondaryColorHex"
-    /// Default: #84888b
-    static var brandSecondary: Color {
-        Color(hex: AppConfiguration.shared.secondaryColorHex)
+    // MARK: - Brand Accent (from config profile)
+
+    /// The single configurable accent color — read from "AccentColorHex"
+    /// (falls back to legacy "PrimaryColorHex"). Default: #1b386d
+    static var brandAccent: Color {
+        Color(hex: AppConfiguration.shared.accentColorHex)
     }
 
-    /// Dark brand color — read from config profile key "DarkColorHex"
-    /// Default: #172951
-    static var brandDark: Color {
-        Color(hex: AppConfiguration.shared.darkColorHex)
+    // MARK: - Adaptive UI Colors
+
+    /// Primary accent for buttons, links, and interactive elements.
+    /// Slightly lighter in dark mode for better contrast on dark surfaces.
+    static var accent: Color {
+        adaptive(
+            light: brandAccent,
+            dark: brandAccent.lightened(by: 0.15)
+        )
     }
 
-    // MARK: - Derived UI Colors (computed from brand colors)
+    /// Window/page background
+    static var windowBackground: Color {
+        adaptive(
+            light: Color(nsColor: .windowBackgroundColor),
+            dark: Color(nsColor: .windowBackgroundColor)
+        )
+    }
 
     /// Background gradient top
     static var backgroundTop: Color {
-        brandDark.darkened(by: 0.35)
+        adaptive(
+            light: Color(white: 0.96),
+            dark: brandAccent.darkened(by: 0.75)
+        )
     }
 
     /// Background gradient bottom
     static var backgroundBottom: Color {
-        brandDark
+        adaptive(
+            light: Color(white: 0.91),
+            dark: brandAccent.darkened(by: 0.60)
+        )
     }
 
     /// Header bar background
     static var headerBar: Color {
-        brandDark.darkened(by: 0.15)
+        adaptive(
+            light: brandAccent,
+            dark: brandAccent.darkened(by: 0.35)
+        )
+    }
+
+    /// Header bar text — always white since the header uses the accent color
+    static var headerText: Color {
+        .white
     }
 
     /// Card/panel background
     static var cardBackground: Color {
-        brandDark.darkened(by: 0.25)
+        adaptive(
+            light: Color(white: 1.0),
+            dark: Color(white: 0.12)
+        )
+    }
+
+    /// Card/panel border
+    static var cardBorder: Color {
+        adaptive(
+            light: Color(white: 0.85),
+            dark: Color(white: 0.2)
+        )
+    }
+
+    /// Primary text color
+    static var textPrimary: Color {
+        adaptive(
+            light: Color(white: 0.1),
+            dark: Color(white: 0.93)
+        )
+    }
+
+    /// Secondary / muted text
+    static var textSecondary: Color {
+        adaptive(
+            light: Color(white: 0.35),
+            dark: Color(white: 0.6)
+        )
+    }
+
+    /// Tertiary / very muted text (captions, hints)
+    static var textTertiary: Color {
+        adaptive(
+            light: Color(white: 0.5),
+            dark: Color(white: 0.4)
+        )
+    }
+
+    /// Divider / separator lines
+    static var divider: Color {
+        adaptive(
+            light: Color(white: 0.85),
+            dark: Color(white: 0.15)
+        )
+    }
+
+    /// Secondary button background
+    static var secondaryButtonBackground: Color {
+        adaptive(
+            light: Color(white: 0.92),
+            dark: Color(white: 0.15)
+        )
+    }
+
+    /// Secondary button border
+    static var secondaryButtonBorder: Color {
+        adaptive(
+            light: Color(white: 0.78),
+            dark: Color(white: 0.25)
+        )
+    }
+
+    /// Secondary button text
+    static var secondaryButtonText: Color {
+        adaptive(
+            light: Color(white: 0.2),
+            dark: Color(white: 0.85)
+        )
+    }
+
+    /// Info box background (used for callout panels)
+    static var infoBoxBackground: Color {
+        adaptive(
+            light: brandAccent.opacity(0.06),
+            dark: brandAccent.opacity(0.12)
+        )
+    }
+
+    /// Info box border
+    static var infoBoxBorder: Color {
+        adaptive(
+            light: brandAccent.opacity(0.15),
+            dark: brandAccent.opacity(0.25)
+        )
     }
 }

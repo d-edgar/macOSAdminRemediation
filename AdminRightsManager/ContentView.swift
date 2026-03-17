@@ -13,7 +13,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Background gradient — brand colors from config profile
+            // Background gradient — adapts to light/dark appearance
             LinearGradient(
                 gradient: Gradient(colors: [
                     .backgroundTop,
@@ -77,16 +77,16 @@ struct RemediatingView: View {
         VStack(spacing: 24) {
             ProgressView()
                 .scaleEffect(2)
-                .tint(.white)
+                .tint(.accent)
 
             Text("Removing Admin Privileges...")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
 
             Text("Please wait while your account is updated.\nThis should only take a moment.")
                 .font(.body)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(40)
@@ -127,11 +127,11 @@ struct RemediationCompleteView: View {
             Text("Remediation Complete")
                 .font(.title)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
 
             Text("Your admin privileges have been removed. Your account is now a standard user and compliant with \(config.organizationName) policy.")
                 .font(.body)
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 500)
 
@@ -140,10 +140,10 @@ struct RemediationCompleteView: View {
                 // Receipt header
                 HStack {
                     Image(systemName: "doc.text.fill")
-                        .foregroundColor(.brandPrimary)
+                        .foregroundColor(.accent)
                     Text("Remediation Receipt")
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(.textPrimary)
                     Spacer()
                     Button {
                         copyReceipt()
@@ -153,36 +153,36 @@ struct RemediationCompleteView: View {
                             Text(copied ? "Copied" : "Copy")
                         }
                         .font(.caption)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.textSecondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.white.opacity(0.1))
+                                .fill(Color.secondaryButtonBackground)
                         )
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color.white.opacity(0.05))
+                .background(Color.cardBackground.opacity(0.6))
 
-                Divider().background(Color.white.opacity(0.1))
+                Divider().background(Color.divider)
 
                 // Receipt body
                 VStack(alignment: .leading, spacing: 8) {
                     receiptRow(label: "Action", value: "Admin rights removed")
                     receiptRow(label: "Status", value: "Completed successfully", valueColor: .green)
-                    Divider().background(Color.white.opacity(0.06)).padding(.vertical, 4)
+                    Divider().background(Color.divider).padding(.vertical, 4)
                     receiptRow(label: "Date & Time", value: receipt.formattedTimestamp)
                     receiptRow(label: "Username", value: receipt.username)
                     receiptRow(label: "Full Name", value: receipt.fullName)
-                    Divider().background(Color.white.opacity(0.06)).padding(.vertical, 4)
+                    Divider().background(Color.divider).padding(.vertical, 4)
                     receiptRow(label: "Computer", value: receipt.hostname)
                     receiptRow(label: "Serial Number", value: receipt.serialNumber)
                     receiptRow(label: "Model", value: receipt.hardwareModel)
                     receiptRow(label: "macOS", value: receipt.macOSVersion)
-                    Divider().background(Color.white.opacity(0.06)).padding(.vertical, 4)
+                    Divider().background(Color.divider).padding(.vertical, 4)
                     receiptRow(label: "Organization", value: receipt.organization)
                     receiptRow(label: "Reference ID", value: receipt.referenceID)
                 }
@@ -190,17 +190,17 @@ struct RemediationCompleteView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.03))
+                    .fill(Color.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            .stroke(Color.cardBorder, lineWidth: 1)
                     )
             )
             .frame(maxWidth: 500)
 
             Text("Save or copy this receipt for your records. If you need temporary admin access in the future, contact \(config.supportContactName).")
                 .font(.callout)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(.textTertiary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 500)
 
@@ -225,11 +225,11 @@ struct RemediationCompleteView: View {
 
     // MARK: - Receipt Row
 
-    private func receiptRow(label: String, value: String, valueColor: Color = .white.opacity(0.85)) -> some View {
+    private func receiptRow(label: String, value: String, valueColor: Color = .textPrimary) -> some View {
         HStack(alignment: .top) {
             Text(label)
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.4))
+                .foregroundColor(.textTertiary)
                 .frame(width: 110, alignment: .trailing)
             Text(value)
                 .font(.caption)
@@ -350,11 +350,11 @@ struct ErrorView: View {
             Text("Something Went Wrong")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
+                .foregroundColor(.textPrimary)
 
             Text(message)
                 .font(.body)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 450)
 
@@ -398,7 +398,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.brandPrimary)
+                    .fill(Color.accent)
                     .opacity(configuration.isPressed ? 0.7 : 1.0)
             )
     }
@@ -408,15 +408,15 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline)
-            .foregroundColor(.white.opacity(0.9))
+            .foregroundColor(.secondaryButtonText)
             .padding(.horizontal, 28)
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.brandSecondary.opacity(0.4), lineWidth: 1)
+                    .stroke(Color.secondaryButtonBorder, lineWidth: 1)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.brandSecondary.opacity(configuration.isPressed ? 0.2 : 0.1))
+                            .fill(Color.secondaryButtonBackground.opacity(configuration.isPressed ? 0.8 : 1.0))
                     )
             )
     }
@@ -431,7 +431,7 @@ struct DangerButtonStyle: ButtonStyle {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.brandPrimary)
+                    .fill(Color.accent)
                     .opacity(configuration.isPressed ? 0.7 : 1.0)
             )
     }
