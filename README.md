@@ -14,7 +14,7 @@ The main window shown to users with admin rights. Displays your organization's p
 ### Diagnostic Report
 If the user clicks "Submit Request," a full system diagnostic report is generated with device info, admin user details, and Jamf Connect status. The user copies the report to clipboard, then opens the help desk portal to paste it into their request.
 
-![Diagnostic Report](Screenshots/02-diagnostic-report.png)
+![Diagnostic Report](Screenshots/03-diagnostic-report.png)
 
 ## How It Works
 
