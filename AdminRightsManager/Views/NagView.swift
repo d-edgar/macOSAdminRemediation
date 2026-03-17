@@ -210,6 +210,30 @@ struct NagView: View {
                 .buttonStyle(SecondaryButtonStyle())
                 .disabled(appState.isLoading)
             }
+
+            // Ticket deferral: dismiss window if user claims they already have a ticket open
+            if appState.canDeferWithTicket {
+                Button {
+                    appState.useTicketDeferral()
+                } label: {
+                    HStack {
+                        Image(systemName: "ticket.fill")
+                        Text("I've Already Submitted a Ticket")
+                        Spacer()
+                        Text("\(appState.ticketDeferralsRemaining) remaining")
+                            .font(.caption)
+                            .foregroundColor(.textTertiary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule()
+                                    .fill(Color.secondaryButtonBackground)
+                            )
+                    }
+                    .frame(maxWidth: 480)
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
         }
     }
 

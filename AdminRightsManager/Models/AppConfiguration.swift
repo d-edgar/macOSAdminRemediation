@@ -120,6 +120,14 @@ struct AppConfiguration {
         return (value as? Bool) ?? true
     }
 
+    /// Maximum number of times a user can click "I've Already Submitted a Ticket"
+    /// to dismiss the window. Once exhausted, the button disappears.
+    /// Set to 0 to hide the button entirely. Default: 10.
+    var maxTicketDeferrals: Int {
+        let value = defaults.integer(forKey: "MaxTicketDeferrals")
+        return value > 0 ? value : (defaults.object(forKey: "MaxTicketDeferrals") != nil ? 0 : 10)
+    }
+
     // MARK: - Branding — Appearance
 
     /// Department name shown in the header (e.g., "IT Services", "IT Security", "Help Desk")

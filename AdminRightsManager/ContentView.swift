@@ -270,8 +270,10 @@ struct RemediationCompleteView: View {
         let cleanupSignalPath = "/Library/Application Support/AdminRightsManager/cleanup"
         try? "cleanup".write(toFile: cleanupSignalPath, atomically: true, encoding: .utf8)
 
-        // Give the signal a moment to be written, then quit
+        // Hide the window first so applicationShouldTerminate allows the quit,
+        // then terminate after a brief delay for the cleanup signal to flush.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NSApplication.shared.windows.first?.orderOut(nil)
             NSApplication.shared.terminate(nil)
         }
     }

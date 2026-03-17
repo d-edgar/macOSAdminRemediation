@@ -239,8 +239,10 @@ struct ReportView: View {
                         if let url = URL(string: config.supportRequestURL) {
                             NSWorkspace.shared.open(url)
                         }
-                        // Close the app after opening the portal
+                        // Hide the window first so the quit guard allows termination,
+                        // then close the app after opening the portal
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            NSApplication.shared.windows.first?.orderOut(nil)
                             NSApplication.shared.terminate(nil)
                         }
                     } label: {

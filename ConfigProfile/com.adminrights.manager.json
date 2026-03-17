@@ -113,6 +113,14 @@
             "type": "boolean",
             "default": true
         },
+        "MaxTicketDeferrals": {
+            "title": "Max Ticket Deferrals",
+            "description": "Number of times a user can click 'I've Already Submitted a Ticket' to dismiss the window. Each use is tracked locally and the count persists across launches. Once exhausted, the button disappears. Set to 0 to hide the button entirely.",
+            "type": "integer",
+            "default": 10,
+            "minimum": 0,
+            "maximum": 100
+        },
         "JamfConnectAppPath": {
             "title": "Jamf Connect App Path",
             "description": "Path to the Jamf Connect application for detection in the diagnostic report.",

@@ -86,6 +86,7 @@ All keys are optional. Deploy via MDM Custom Settings targeting domain `com.admi
 | AllowDeferral | Boolean | false | Let users close without acting |
 | GracePeriodDays | Integer | 0 | Days before forced remediation |
 | ShowSubmitRequestOption | Boolean | true | Show "Submit Request" button |
+| MaxTicketDeferrals | Integer | 10 | Times user can defer with "I've Already Submitted a Ticket" (0 = hide) |
 | JamfConnectAppPath | String | /Applications/Jamf Connect.app | Path to detect Jamf Connect |
 | EnableLocalAuditLog | Boolean | true | Write local audit log |
 | AuditLogPath | String | /Library/Logs/AdminRightsManager.log | Audit log location |
